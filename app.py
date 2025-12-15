@@ -688,31 +688,16 @@ def delete_course(course_id):
 # ========================================
 # 主程式入口
 # ========================================
+import os # 如果你上面沒加，加在這裡也可以
+
 if __name__ == '__main__':
-    print('=' * 60)
-    print('🚀 北護課程查詢系統啟動中...')
-    print('=' * 60)
+    init_db()
+    check_users()
     
-    # 檢查資料庫是否存在
-    if not os.path.exists(DATABASE):
-        print('❌ 資料庫不存在！請先執行 create_database.py')
-        exit(1)
+    # 這是關鍵：取得 Render 指派的 Port，如果沒有就用 10000
+    port = int(os.environ.get("PORT", 10000))
     
-    # 顯示資料庫統計
-    conn = get_db()
-    course_count = conn.execute('SELECT COUNT(*) as count FROM courses').fetchone()['count']
-    user_count = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
-    conn.close()
+    print(f"啟動伺服器於 Port {port}...")
     
-    print(f'📊 資料庫統計:')
-    print(f'   課程數: {course_count} 筆')
-    print(f'   使用者: {user_count} 人')
-    print('📍 本地網址: http://127.0.0.1:5000')
-    print('📝 測試帳號:')
-    print('   學生 - student1 / pass123')
-    print('   管理員 - admin / admin123')
-    print('=' * 60)
-    print()
-    
-    # 啟動Flask應用
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # host='0.0.0.0' 代表允許外部連線 (Render 才能連)
+    app.run(host='0.0.0.0', port=port)
