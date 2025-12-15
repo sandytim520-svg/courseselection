@@ -1122,6 +1122,7 @@ async function submitChangePassword(event) {
 // 帳號編輯功能
 // ========================================
 let editingUserId = null;
+let editingUserRole = null;
 
 async function editAccount(userId) {
     try {
@@ -1131,15 +1132,40 @@ async function editAccount(userId) {
         if (data.success && data.user) {
             editingUserId = userId;
             const user = data.user;
+            editingUserRole = user.role;
             
+            // 設定隱藏欄位
             document.getElementById('editAccountId').value = user.id;
-            document.getElementById('editAccountName').value = user.name || '';
-            document.getElementById('editAccountStudentId').value = user.student_id || '';
-            document.getElementById('editAccountDepartment').value = user.department || '';
-            document.getElementById('editAccountClass').value = user.class_name || '';
-            document.getElementById('editAccountUsername').value = user.username || '';
+            document.getElementById('editAccountRoleHidden').value = user.role;
             document.getElementById('editAccountAvatarDisplay').textContent = user.avatar || '🐱';
             document.getElementById('editAccountAvatar').value = user.avatar || '🐱';
+            
+            // 根據角色顯示不同欄位
+            if (user.role === 'admin') {
+                document.getElementById('editAccountModalTitle').textContent = '編輯管理員帳號';
+                document.getElementById('editStudentFields').style.display = 'none';
+                document.getElementById('editAdminFields').style.display = 'block';
+                
+                // 填入管理員資料
+                document.getElementById('editAdminName').value = user.name || '';
+                document.getElementById('editAdminId').value = user.student_id || user.username || '';
+                document.getElementById('editAdminPhone').value = user.phone || '';
+                document.getElementById('editAdminEmail').value = user.email || '';
+                document.getElementById('editAdminUsername').value = user.username || '';
+            } else {
+                document.getElementById('editAccountModalTitle').textContent = '編輯學生帳號';
+                document.getElementById('editStudentFields').style.display = 'block';
+                document.getElementById('editAdminFields').style.display = 'none';
+                
+                // 填入學生資料
+                document.getElementById('editAccountName').value = user.name || '';
+                document.getElementById('editAccountStudentId').value = user.student_id || '';
+                document.getElementById('editAccountDepartment').value = user.department || '';
+                document.getElementById('editAccountClass').value = user.class_name || '';
+                document.getElementById('editAccountPhone').value = user.phone || '';
+                document.getElementById('editAccountEmail').value = user.email || '';
+                document.getElementById('editAccountUsername').value = user.username || '';
+            }
             
             document.getElementById('editAccountModal').style.display = 'flex';
         }
@@ -1166,14 +1192,28 @@ async function submitEditAccount(event) {
     
     if (!editingUserId) return;
     
-    const data = {
-        name: document.getElementById('editAccountName').value,
-        student_id: document.getElementById('editAccountStudentId').value,
-        department: document.getElementById('editAccountDepartment').value,
-        class_name: document.getElementById('editAccountClass').value,
-        username: document.getElementById('editAccountUsername').value,
+    let data = {
         avatar: document.getElementById('editAccountAvatar').value || '🐱'
     };
+    
+    // 根據角色取得不同欄位的值
+    if (editingUserRole === 'admin') {
+        data.name = document.getElementById('editAdminName').value;
+        data.student_id = document.getElementById('editAdminId').value;
+        data.phone = document.getElementById('editAdminPhone').value;
+        data.email = document.getElementById('editAdminEmail').value;
+        data.username = document.getElementById('editAdminUsername').value;
+        data.department = '';
+        data.class_name = '';
+    } else {
+        data.name = document.getElementById('editAccountName').value;
+        data.student_id = document.getElementById('editAccountStudentId').value;
+        data.department = document.getElementById('editAccountDepartment').value;
+        data.class_name = document.getElementById('editAccountClass').value;
+        data.phone = document.getElementById('editAccountPhone').value;
+        data.email = document.getElementById('editAccountEmail').value;
+        data.username = document.getElementById('editAccountUsername').value;
+    }
     
     try {
         const response = await fetch(`/api/users/${editingUserId}`, {
