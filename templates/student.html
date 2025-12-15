@@ -62,7 +62,7 @@
                 <span>登出</span>
             </button>
             
-            <div class="mascot">
+            <div class="mascot" onclick="showProfileModal()" style="cursor: pointer;" title="個人檔案">
                 <div class="mascot-icon">🥣</div>
                 <p>粥預選</p>
             </div>
@@ -230,6 +230,129 @@
             </div>
         </section>
     </main>
+    
+    <!-- ========================================
+         Modal: 個人檔案主選單
+         ======================================== -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content modal-profile">
+            <div class="modal-header">
+                <h3>個人檔案</h3>
+                <button class="close-btn" onclick="closeProfileModal()">✖</button>
+            </div>
+            <div class="modal-body profile-menu">
+                <div class="profile-card">
+                    <div class="profile-avatar">🥣</div>
+                    <div class="profile-name" id="profileDisplayName">粥預選</div>
+                    <div class="profile-id" id="profileDisplayId">ID：-</div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button class="profile-btn" onclick="showEditProfileModal()">
+                        <span class="btn-icon">📝</span>
+                        <span>修改檔案</span>
+                    </button>
+                    <button class="profile-btn" onclick="showChangePasswordModal()">
+                        <span class="btn-icon">🔒</span>
+                        <span>帳號管理</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         Modal: 修改檔案
+         ======================================== -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 個人檔案</h3>
+                <button class="close-btn" onclick="closeEditProfileModal()">✖</button>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm" onsubmit="submitEditProfile(event)">
+                    <div class="profile-edit-container">
+                        <div class="profile-info-section">
+                            <div class="form-group readonly">
+                                <label>姓名：</label>
+                                <span id="editProfileName">-</span>
+                            </div>
+                            
+                            <div class="form-group readonly">
+                                <label>學號：</label>
+                                <span id="editProfileStudentId">-</span>
+                            </div>
+                            
+                            <div class="form-group readonly">
+                                <label>系所：</label>
+                                <span id="editProfileDepartment">-</span>
+                            </div>
+                            
+                            <div class="form-group readonly">
+                                <label>班級：</label>
+                                <span id="editProfileClass">-</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>電話：</label>
+                                <input type="tel" id="editProfilePhone" placeholder="請輸入電話">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>電子郵件：</label>
+                                <input type="email" id="editProfileEmail" placeholder="請輸入電子郵件">
+                            </div>
+                        </div>
+                        
+                        <div class="profile-avatar-section">
+                            <div class="profile-avatar-large">🥣</div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeEditProfileModal()">取消</button>
+                        <button type="submit" class="btn-submit">儲存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         Modal: 變更密碼
+         ======================================== -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>🔒 變更密碼</h3>
+                <button class="close-btn" onclick="closeChangePasswordModal()">✖</button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm" onsubmit="submitChangePassword(event)">
+                    <div class="form-group">
+                        <label>舊密碼：</label>
+                        <input type="password" id="oldPassword" required placeholder="請輸入舊密碼">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>新密碼：</label>
+                        <input type="password" id="newPassword" required placeholder="請輸入新密碼">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>再次輸入密碼：</label>
+                        <input type="password" id="confirmPassword" required placeholder="請輸入新密碼">
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn-back" onclick="closeChangePasswordModal()">返回</button>
+                        <button type="submit" class="btn-submit">確定</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/student.js') }}"></script>
