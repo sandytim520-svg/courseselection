@@ -339,6 +339,84 @@ body {
     border-color: #D8B4A8;
 }
 
+/* 課程內容分類複選框 */
+.category-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 10px 0;
+}
+
+.category-row > label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    min-width: 100px;
+}
+
+.category-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.category-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.category-checkboxes input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #8B4513;
+}
+
+/* 星期複選框 */
+.weekday-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 10px 0;
+}
+
+.weekday-row > label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    min-width: 100px;
+}
+
+.weekday-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.weekday-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.weekday-checkboxes input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #8B4513;
+}
+
 /* 篩選條件列 */
 .filter-row {
     display: flex;
@@ -1554,4 +1632,39 @@ textarea {
     background: #F8D7DA;
     color: #721C24;
     border: 1px solid #F5C6CB;
+}
+
+/* 編輯帳號視窗樣式 */
+.modal-header-figma-account {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #C4A35A 0%, #B8956E 100%);
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-header-figma-account h3 {
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.modal-body-figma-account {
+    padding: 24px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.password-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.password-mask {
+    font-size: 16px;
+    color: #666;
+    letter-spacing: 2px;
 }
