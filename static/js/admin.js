@@ -691,7 +691,7 @@ function displayStudents(students) {
                 <button class="delete-account-btn" onclick="event.stopPropagation(); deleteAccount(${user.id}, '${user.username}')" title="刪除帳號">✖</button>
                 <div class="account-avatar-emoji">${avatar}</div>
                 <div class="account-name">${user.name || user.username}</div>
-                <div class="account-id">ID : ${user.student_id || user.username}</div>
+                <div class="account-id">學號：${user.student_id || user.username}</div>
             </div>
         `;
     });
@@ -810,11 +810,11 @@ function selectAvatar(element) {
 // ========================================
 // 功能：刪除帳號
 // ========================================
-async function deleteAccount(username) {
+async function deleteAccount(userId, username) {
     if (!confirm(`確定要刪除帳號 ${username} 嗎？`)) return;
     
     try {
-        const response = await fetch(`/api/users/${username}`, {
+        const response = await fetch(`/api/users/${userId}`, {
             method: 'DELETE'
         });
         const result = await response.json();
