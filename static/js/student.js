@@ -1135,6 +1135,13 @@ function closeChangePasswordModal() {
     document.getElementById('changePasswordModal').style.display = 'none';
 }
 
+// 返回個人檔案主選單
+function backToProfileModal() {
+    closeEditProfileModal();
+    closeChangePasswordModal();
+    showProfileModal();
+}
+
 async function submitChangePassword(event) {
     event.preventDefault();
     
