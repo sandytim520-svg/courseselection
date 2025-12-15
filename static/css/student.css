@@ -1589,3 +1589,300 @@ body {
 .btn-cancel:hover, .btn-back:hover {
     background: #eee;
 }
+/* ========================================
+   Figma 設計的 Modal 樣式
+   ======================================== */
+
+/* Figma 個人檔案編輯 Modal */
+.modal-figma-profile {
+    max-width: 480px;
+    padding: 0;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.modal-figma-password {
+    max-width: 420px;
+    padding: 0;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.modal-header-figma {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-title-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-icon {
+    font-size: 24px;
+}
+
+.modal-header-figma h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #5A6C57;
+    margin: 0;
+}
+
+.modal-header-figma .close-btn {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.btn-back-figma {
+    padding: 8px 20px;
+    background: white;
+    border: 2px solid #5A6C57;
+    border-radius: 8px;
+    color: #5A6C57;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-back-figma:hover {
+    background: #5A6C57;
+    color: white;
+}
+
+.modal-body-figma {
+    padding: 24px;
+}
+
+.modal-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+}
+
+.modal-card-profile {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    padding: 30px;
+}
+
+/* 大頭貼顯示區域 */
+.avatar-display-area {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.avatar-large-circle {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    box-shadow: 0 4px 12px rgba(90, 108, 87, 0.15);
+}
+
+/* 小頭貼選擇器 - 一行排列 */
+.avatar-selector-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 0 10px;
+}
+
+.avatar-option-sm {
+    font-size: 24px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.avatar-option-sm:hover {
+    background: #E8F5E9;
+    transform: scale(1.15);
+}
+
+.avatar-option-sm.selected {
+    background: #E8F5E9;
+    border-color: #5A6C57;
+}
+
+/* 兩欄表單佈局 */
+.form-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group-figma {
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.form-group-figma label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.form-group-figma input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fafafa;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.form-group-figma input::placeholder {
+    color: #aaa;
+}
+
+.form-group-figma input:focus {
+    outline: none;
+    border-color: #5A6C57;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(90, 108, 87, 0.1);
+}
+
+.readonly-input {
+    background: #f0f0f0 !important;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.readonly-input:focus {
+    background: #f0f0f0 !important;
+    border-color: #ddd !important;
+    box-shadow: none !important;
+}
+
+/* Figma 風格按鈕 */
+.modal-footer-figma {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn-cancel-figma {
+    padding: 12px 28px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel-figma:hover {
+    background: #eee;
+}
+
+.btn-save-figma {
+    padding: 12px 28px;
+    background: #5A6C57;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-save-figma:hover {
+    background: #4A5C47;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(90, 108, 87, 0.3);
+}
+
+.btn-confirm-figma {
+    width: auto;
+    min-width: 120px;
+    padding: 12px 32px;
+    margin-top: 16px;
+    background: #5A6C57;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-confirm-figma:hover {
+    background: #4A5C47;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(90, 108, 87, 0.3);
+}
+
+.modal-card .message,
+.modal-card-profile .message {
+    margin: 16px 0;
+    padding: 12px;
+    font-size: 13px;
+    border-radius: 8px;
+}
+
+.message.success {
+    background: #D4EDDA;
+    color: #155724;
+    border: 1px solid #C3E6CB;
+}
+
+.message.error {
+    background: #F8D7DA;
+    color: #721C24;
+    border: 1px solid #F5C6CB;
+}
+
+/* 響應式調整 */
+@media (max-width: 500px) {
+    .form-grid-2col {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-figma-profile,
+    .modal-figma-password {
+        width: 95%;
+    }
+    
+    .avatar-selector-row {
+        gap: 5px;
+    }
+    
+    .avatar-option-sm {
+        font-size: 20px;
+        padding: 4px;
+    }
+}
