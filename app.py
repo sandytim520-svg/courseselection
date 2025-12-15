@@ -86,116 +86,190 @@ def execute_query(query, params=None, fetch=False, fetchone=False):
 
 def init_db():
     """初始化資料庫 - 創建表格和添加新欄位"""
-    conn = get_db()
-    cursor = conn.cursor()
+    print("[init_db] 開始初始化資料庫...")
     
-    if USE_POSTGRES:
-        # PostgreSQL 創建表格
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'student',
-                name TEXT DEFAULT '',
-                student_id TEXT DEFAULT '',
-                department TEXT DEFAULT '',
-                class_name TEXT DEFAULT '',
-                phone TEXT DEFAULT '',
-                email TEXT DEFAULT '',
-                avatar TEXT DEFAULT '🐱',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
         
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS courses (
-                id SERIAL PRIMARY KEY,
-                semester TEXT NOT NULL,
-                department TEXT NOT NULL,
-                grade TEXT,
-                course_code TEXT NOT NULL,
-                course_name TEXT NOT NULL,
-                course_name_en TEXT,
-                instructor TEXT,
-                credits REAL,
-                course_type TEXT,
-                classroom TEXT,
-                day_time TEXT,
-                weekday TEXT,
-                period TEXT,
-                capacity INTEGER DEFAULT 60,
-                enrolled INTEGER DEFAULT 0,
-                class_group TEXT,
-                remarks TEXT,
-                course_summary TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS enrollments (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id),
-                course_id INTEGER REFERENCES courses(id),
-                status TEXT DEFAULT 'enrolled',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        # 嘗試添加 avatar 欄位
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '🐱'")
-        except:
-            pass
+        if USE_POSTGRES:
+            print("[init_db] 使用 PostgreSQL 模式")
             
-    else:
-        # SQLite
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'student',
-                name TEXT DEFAULT '',
-                student_id TEXT DEFAULT '',
-                department TEXT DEFAULT '',
-                class_name TEXT DEFAULT '',
-                phone TEXT DEFAULT '',
-                email TEXT DEFAULT '',
-                avatar TEXT DEFAULT '🐱',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+            # PostgreSQL 創建表格
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'student',
+                    name TEXT DEFAULT '',
+                    student_id TEXT DEFAULT '',
+                    department TEXT DEFAULT '',
+                    class_name TEXT DEFAULT '',
+                    phone TEXT DEFAULT '',
+                    email TEXT DEFAULT '',
+                    avatar TEXT DEFAULT '🐱',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+            print("[init_db] users 表創建/檢查完成")
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS courses (
+                    id SERIAL PRIMARY KEY,
+                    semester TEXT NOT NULL,
+                    department TEXT NOT NULL,
+                    grade TEXT,
+                    course_code TEXT NOT NULL,
+                    course_name TEXT NOT NULL,
+                    course_name_en TEXT,
+                    instructor TEXT,
+                    credits REAL,
+                    course_type TEXT,
+                    classroom TEXT,
+                    day_time TEXT,
+                    weekday TEXT,
+                    period TEXT,
+                    capacity INTEGER DEFAULT 60,
+                    enrolled INTEGER DEFAULT 0,
+                    class_group TEXT,
+                    remarks TEXT,
+                    course_summary TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+            print("[init_db] courses 表創建/檢查完成")
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS enrollments (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+                    status TEXT DEFAULT 'enrolled',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+            print("[init_db] enrollments 表創建/檢查完成")
+            
+            # 創建索引
+            try:
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_courses_semester ON courses(semester)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_courses_department ON courses(department)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_enrollments_user ON enrollments(user_id)')
+                conn.commit()
+                print("[init_db] 索引創建完成")
+            except Exception as e:
+                print(f"[init_db] 創建索引時發生錯誤（可能已存在）: {e}")
+                conn.rollback()
+            
+            # 嘗試添加 avatar 欄位（如果不存在）
+            try:
+                cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT DEFAULT '🐱'")
+                conn.commit()
+            except Exception as e:
+                print(f"[init_db] avatar 欄位可能已存在: {e}")
+                conn.rollback()
+            
+            # 檢查是否需要插入預設使用者
+            cursor.execute('SELECT COUNT(*) FROM users')
+            user_count = cursor.fetchone()
+            if USE_POSTGRES:
+                user_count = user_count['count'] if isinstance(user_count, dict) else user_count[0]
+            else:
+                user_count = user_count[0] if user_count else 0
+            
+            if user_count == 0:
+                print("[init_db] 插入預設使用者...")
+                cursor.execute('''
+                    INSERT INTO users (username, password, role, name, student_id, department, avatar)
+                    VALUES 
+                        ('student1', 'pass123', 'student', '測試學生', 'S001', '護理系', '🐱'),
+                        ('admin', 'admin123', 'admin', '系統管理員', 'A001', '資訊中心', '👨‍💼')
+                ''')
+                conn.commit()
+                print("[init_db] 預設使用者插入完成")
+                
+        else:
+            print("[init_db] 使用 SQLite 模式")
+            # SQLite
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'student',
+                    name TEXT DEFAULT '',
+                    student_id TEXT DEFAULT '',
+                    department TEXT DEFAULT '',
+                    class_name TEXT DEFAULT '',
+                    phone TEXT DEFAULT '',
+                    email TEXT DEFAULT '',
+                    avatar TEXT DEFAULT '🐱',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS courses (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    semester TEXT NOT NULL,
+                    department TEXT NOT NULL,
+                    grade TEXT,
+                    course_code TEXT NOT NULL,
+                    course_name TEXT NOT NULL,
+                    course_name_en TEXT,
+                    instructor TEXT,
+                    credits REAL,
+                    course_type TEXT,
+                    classroom TEXT,
+                    day_time TEXT,
+                    weekday TEXT,
+                    period TEXT,
+                    capacity INTEGER DEFAULT 60,
+                    enrolled INTEGER DEFAULT 0,
+                    class_group TEXT,
+                    remarks TEXT,
+                    course_summary TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS enrollments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    course_id INTEGER NOT NULL,
+                    status TEXT DEFAULT 'enrolled',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id),
+                    FOREIGN KEY (course_id) REFERENCES courses(id)
+                )
+            ''')
+            
+            # 嘗試添加新欄位（SQLite 不支援 IF NOT EXISTS）
+            columns_to_add = ['name', 'student_id', 'department', 'class_name', 'phone', 'email', 'avatar']
+            for col in columns_to_add:
+                try:
+                    default_val = "'🐱'" if col == 'avatar' else "''"
+                    cursor.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT DEFAULT {default_val}")
+                except: 
+                    pass
         
-        # 嘗試添加新欄位
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN name TEXT DEFAULT ''")
-        except: pass
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN student_id TEXT DEFAULT ''")
-        except: pass
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN department TEXT DEFAULT ''")
-        except: pass
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN class_name TEXT DEFAULT ''")
-        except: pass
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''")
-        except: pass
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''")
-        except: pass
-        try:
-            cursor.execute("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '🐱'")
-        except: pass
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("[init_db] 資料庫初始化完成!")
+        
+    except Exception as e:
+        print(f"[init_db] 初始化資料庫時發生錯誤: {e}")
+        import traceback
+        traceback.print_exc()
 
 # 初始化資料庫
+print("[APP] 應用程式啟動，開始初始化資料庫...")
 init_db()
 
 # ========================================
