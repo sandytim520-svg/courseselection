@@ -711,24 +711,6 @@ def delete_course(course_id):
 # 主程式入口
 # ========================================
 if __name__ == '__main__':
+    import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
-    
-    # 顯示資料庫統計
-    conn = get_db()
-    course_count = conn.execute('SELECT COUNT(*) as count FROM courses').fetchone()['count']
-    user_count = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
-    conn.close()
-    
-    print(f'📊 資料庫統計:')
-    print(f'   課程數: {course_count} 筆')
-    print(f'   使用者: {user_count} 人')
-    print('📍 本地網址: http://127.0.0.1:5000')
-    print('📝 測試帳號:')
-    print('   學生 - student1 / pass123')
-    print('   管理員 - admin / admin123')
-    print('=' * 60)
-    print()
-    
-    # 啟動Flask應用
-    app.run(host='0.0.0.0', port=5000, debug=True)
