@@ -68,8 +68,8 @@
             </button>
             
             <div class="mascot" onclick="showChangePasswordModal()" style="cursor: pointer;" title="點擊變更密碼">
-                <div class="mascot-icon">🧑‍💼</div>
-                <p>管鯉圖</p>
+                <div class="mascot-icon" id="adminAvatar">🧑‍💼</div>
+                <p id="adminName">管理員</p>
             </div>
         </div>
     </nav>
@@ -246,9 +246,20 @@
                 </button>
             </div>
             
-            <!-- 帳號卡片列表 -->
-            <div id="accountsGrid" class="accounts-grid">
-                <p class="no-results">載入中...</p>
+            <!-- 學生區塊 -->
+            <div class="accounts-block">
+                <h3 class="block-title">🎓 學生帳號</h3>
+                <div id="studentsGrid" class="accounts-grid">
+                    <p class="no-results">載入中...</p>
+                </div>
+            </div>
+            
+            <!-- 管理員區塊 -->
+            <div class="accounts-block">
+                <h3 class="block-title">🛡️ 管理員帳號</h3>
+                <div id="adminsGrid" class="accounts-grid">
+                    <p class="no-results">載入中...</p>
+                </div>
             </div>
         </section>
     </main>
@@ -383,26 +394,51 @@
             <div class="modal-body">
                 <form id="accountForm">
                     <div class="form-group">
-                        <label>使用者名稱 *</label>
-                        <input type="text" id="accountUsername" required>
+                        <label>頭貼 *</label>
+                        <div class="avatar-selector">
+                            <span class="avatar-option selected" data-avatar="🐱" onclick="selectAvatar(this)">🐱</span>
+                            <span class="avatar-option" data-avatar="🐶" onclick="selectAvatar(this)">🐶</span>
+                            <span class="avatar-option" data-avatar="🐰" onclick="selectAvatar(this)">🐰</span>
+                            <span class="avatar-option" data-avatar="🐼" onclick="selectAvatar(this)">🐼</span>
+                            <span class="avatar-option" data-avatar="🦊" onclick="selectAvatar(this)">🦊</span>
+                            <span class="avatar-option" data-avatar="🐨" onclick="selectAvatar(this)">🐨</span>
+                            <span class="avatar-option" data-avatar="🦁" onclick="selectAvatar(this)">🦁</span>
+                            <span class="avatar-option" data-avatar="🐯" onclick="selectAvatar(this)">🐯</span>
+                            <span class="avatar-option" data-avatar="🐸" onclick="selectAvatar(this)">🐸</span>
+                            <span class="avatar-option" data-avatar="🐵" onclick="selectAvatar(this)">🐵</span>
+                            <span class="avatar-option" data-avatar="🦄" onclick="selectAvatar(this)">🦄</span>
+                            <span class="avatar-option" data-avatar="🐲" onclick="selectAvatar(this)">🐲</span>
+                        </div>
+                        <input type="hidden" id="accountAvatar" value="🐱">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ID/學號 *</label>
+                        <input type="text" id="accountUsername" required placeholder="請輸入學號或員工編號">
                     </div>
                     
                     <div class="form-group">
                         <label>密碼 *</label>
-                        <input type="password" id="accountPassword" required>
+                        <input type="password" id="accountPassword" required placeholder="請輸入密碼">
                     </div>
                     
                     <div class="form-group">
                         <label>姓名 *</label>
-                        <input type="text" id="accountName" required>
+                        <input type="text" id="accountName" required placeholder="請輸入姓名">
                     </div>
                     
-                    <div class="form-group">
-                        <label>角色 *</label>
-                        <select id="accountRole" required>
-                            <option value="student">學生</option>
-                            <option value="admin">管理員</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>角色 *</label>
+                            <select id="accountRole" required>
+                                <option value="student">學生</option>
+                                <option value="admin">管理員</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>手機號碼 *</label>
+                            <input type="tel" id="accountPhone" required placeholder="請輸入手機號碼">
+                        </div>
                     </div>
                     
                     <div class="modal-footer">
@@ -463,7 +499,24 @@
                     <input type="hidden" id="editAccountId">
                     
                     <div class="account-profile">
-                        <div class="profile-avatar">🧑‍🎓</div>
+                        <div class="profile-avatar-edit">
+                            <div class="profile-avatar" id="editAccountAvatarDisplay">🐱</div>
+                            <div class="avatar-selector">
+                                <span class="avatar-option" data-avatar="🐱" onclick="selectEditAvatar(this)">🐱</span>
+                                <span class="avatar-option" data-avatar="🐶" onclick="selectEditAvatar(this)">🐶</span>
+                                <span class="avatar-option" data-avatar="🐰" onclick="selectEditAvatar(this)">🐰</span>
+                                <span class="avatar-option" data-avatar="🐼" onclick="selectEditAvatar(this)">🐼</span>
+                                <span class="avatar-option" data-avatar="🦊" onclick="selectEditAvatar(this)">🦊</span>
+                                <span class="avatar-option" data-avatar="🐨" onclick="selectEditAvatar(this)">🐨</span>
+                                <span class="avatar-option" data-avatar="🦁" onclick="selectEditAvatar(this)">🦁</span>
+                                <span class="avatar-option" data-avatar="🐯" onclick="selectEditAvatar(this)">🐯</span>
+                                <span class="avatar-option" data-avatar="🐸" onclick="selectEditAvatar(this)">🐸</span>
+                                <span class="avatar-option" data-avatar="🐵" onclick="selectEditAvatar(this)">🐵</span>
+                                <span class="avatar-option" data-avatar="🦄" onclick="selectEditAvatar(this)">🦄</span>
+                                <span class="avatar-option" data-avatar="🐲" onclick="selectEditAvatar(this)">🐲</span>
+                            </div>
+                            <input type="hidden" id="editAccountAvatar" value="🐱">
+                        </div>
                         <div class="profile-info">
                             <div class="form-group">
                                 <label>姓名：</label>
