@@ -56,7 +56,7 @@
              ======================================== -->
         <div class="right-section">
             <div class="login-box">
-                <h2>Login</h2>
+                <h2>Student Login</h2>
                 
                 <!-- 登入表單 -->
                 <form id="loginForm" onsubmit="handleLogin(event)">
@@ -91,7 +91,7 @@
                     </div>
                     
                     <!-- 忘記密碼 -->
-                    <a href="#" class="forgot-password">忘記密碼?</a>
+                    <a href="#" class="forgot-password" onclick="showForgotPassword(); return false;">忘記密碼?</a>
                     
                     <!-- 登入按鈕 -->
                     <button type="submit" class="login-btn">登入</button>
@@ -107,6 +107,63 @@
                         學生：student1 / pass123<br>
                         管理員：admin / admin123
                     </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         Modal: 忘記密碼 - 驗證
+         ======================================== -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔑 忘記密碼</h3>
+                <button class="close-btn" onclick="closeForgotPassword()">✖</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-hint">請輸入您的學號/ID 和手機號碼進行驗證</p>
+                <div class="form-group">
+                    <label>學號/ID：</label>
+                    <input type="text" id="forgotStudentId" placeholder="請輸入學號或ID">
+                </div>
+                <div class="form-group">
+                    <label>手機號碼：</label>
+                    <input type="tel" id="forgotPhone" placeholder="請輸入手機號碼">
+                </div>
+                <div id="forgotMessage" class="message"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeForgotPassword()">取消</button>
+                    <button type="button" class="btn-submit" onclick="verifyForgotPassword()">驗證</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         Modal: 忘記密碼 - 重設密碼
+         ======================================== -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 重設密碼</h3>
+                <button class="close-btn" onclick="closeResetPassword()">✖</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-hint" id="resetUserName">您好！請設定新密碼</p>
+                <input type="hidden" id="resetUserId">
+                <div class="form-group">
+                    <label>新密碼：</label>
+                    <input type="password" id="resetNewPassword" placeholder="請輸入新密碼">
+                </div>
+                <div class="form-group">
+                    <label>再次輸入密碼：</label>
+                    <input type="password" id="resetConfirmPassword" placeholder="請再次輸入新密碼">
+                </div>
+                <div id="resetMessage" class="message"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeResetPassword()">取消</button>
+                    <button type="button" class="btn-submit" onclick="submitResetPassword()">確定</button>
                 </div>
             </div>
         </div>
@@ -201,6 +258,113 @@
                 if (form) form.dispatchEvent(new Event('submit'));
             }
         });
+        
+        // ========================================
+        // 忘記密碼功能
+        // ========================================
+        function showForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'flex';
+            document.getElementById('forgotStudentId').value = '';
+            document.getElementById('forgotPhone').value = '';
+            document.getElementById('forgotMessage').textContent = '';
+        }
+        
+        function closeForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'none';
+        }
+        
+        async function verifyForgotPassword() {
+            const studentId = document.getElementById('forgotStudentId').value.trim();
+            const phone = document.getElementById('forgotPhone').value.trim();
+            const messageEl = document.getElementById('forgotMessage');
+            
+            if (!studentId || !phone) {
+                messageEl.textContent = '請輸入學號和手機號碼';
+                messageEl.className = 'message error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/forgot-password/verify', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ student_id: studentId, phone: phone })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeForgotPassword();
+                    // 顯示重設密碼視窗
+                    document.getElementById('resetUserId').value = result.user_id;
+                    document.getElementById('resetUserName').textContent = `您好，${result.name}！請設定新密碼`;
+                    document.getElementById('resetNewPassword').value = '';
+                    document.getElementById('resetConfirmPassword').value = '';
+                    document.getElementById('resetMessage').textContent = '';
+                    document.getElementById('resetPasswordModal').style.display = 'flex';
+                } else {
+                    messageEl.textContent = result.message || '驗證失敗';
+                    messageEl.className = 'message error';
+                }
+            } catch (error) {
+                console.error('驗證錯誤:', error);
+                messageEl.textContent = '網路錯誤，請稍後再試';
+                messageEl.className = 'message error';
+            }
+        }
+        
+        function closeResetPassword() {
+            document.getElementById('resetPasswordModal').style.display = 'none';
+        }
+        
+        async function submitResetPassword() {
+            const userId = document.getElementById('resetUserId').value;
+            const newPassword = document.getElementById('resetNewPassword').value;
+            const confirmPassword = document.getElementById('resetConfirmPassword').value;
+            const messageEl = document.getElementById('resetMessage');
+            
+            if (!newPassword || !confirmPassword) {
+                messageEl.textContent = '請輸入新密碼';
+                messageEl.className = 'message error';
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                messageEl.textContent = '兩次密碼輸入不一致';
+                messageEl.className = 'message error';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/forgot-password/reset', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: userId,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageEl.textContent = '密碼重設成功！';
+                    messageEl.className = 'message success';
+                    setTimeout(() => {
+                        closeResetPassword();
+                        alert('密碼已重設，請使用新密碼登入');
+                    }, 1000);
+                } else {
+                    messageEl.textContent = result.message || '重設失敗';
+                    messageEl.className = 'message error';
+                }
+            } catch (error) {
+                console.error('重設密碼錯誤:', error);
+                messageEl.textContent = '網路錯誤，請稍後再試';
+                messageEl.className = 'message error';
+            }
+        }
     </script>
 </body>
 </html>
