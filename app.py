@@ -1232,27 +1232,47 @@ def reset_user_password(user_id):
 @app.route('/api/import-courses', methods=['POST'])
 def import_courses():
     """匯入課程 Excel 檔案"""
+    print("[import_courses] 開始處理匯入請求")
+    
     if 'user_id' not in session or session.get('role') != 'admin':
+        print("[import_courses] 權限不足")
         return jsonify({'success': False, 'message': '權限不足'})
     
     if 'file' not in request.files:
+        print("[import_courses] 沒有檔案")
         return jsonify({'success': False, 'message': '沒有選擇檔案'})
     
     file = request.files['file']
     if file.filename == '':
+        print("[import_courses] 檔案名稱為空")
         return jsonify({'success': False, 'message': '沒有選擇檔案'})
     
     semester = request.form.get('semester', '')
     if not semester:
+        print("[import_courses] 沒有指定學期")
         return jsonify({'success': False, 'message': '請指定學期'})
     
+    print(f"[import_courses] 檔案: {file.filename}, 學期: {semester}")
+    
     try:
+        # 讀取 Excel 檔案
+        print("[import_courses] 開始讀取 Excel 檔案...")
         if file.filename.endswith('.xls'):
-            df = pd.read_excel(file, header=3, engine='xlrd')
+            try:
+                df = pd.read_excel(file, header=3, engine='xlrd')
+                print(f"[import_courses] 使用 xlrd 讀取成功，共 {len(df)} 行")
+            except Exception as xlrd_error:
+                print(f"[import_courses] xlrd 讀取失敗: {xlrd_error}")
+                # 嘗試不指定 engine
+                file.seek(0)  # 重置檔案指標
+                df = pd.read_excel(file, header=3)
         else:
             df = pd.read_excel(file, header=3)
         
+        print(f"[import_courses] Excel 讀取完成，欄位數: {len(df.columns)}, 資料行數: {len(df)}")
+        
         imported_count = 0
+        error_count = 0
         
         for idx, row in df.iterrows():
             if idx == 0:
@@ -1284,10 +1304,13 @@ def import_courses():
                            '5': '週五', '6': '週六', '7': '週日'}
                 day_time = ''
                 if weekday:
-                    day_str = day_map.get(str(int(float(weekday))), '')
-                    if day_str:
-                        day_time = f"{day_str} {period}"
-                    weekday = str(int(float(weekday)))
+                    try:
+                        day_str = day_map.get(str(int(float(weekday))), '')
+                        if day_str:
+                            day_time = f"{day_str} {period}"
+                        weekday = str(int(float(weekday)))
+                    except:
+                        pass
                 
                 existing = execute_query(
                     'SELECT id FROM courses WHERE semester = ? AND course_code = ? AND class_group = ?',
@@ -1325,8 +1348,11 @@ def import_courses():
                 imported_count += 1
                 
             except Exception as e:
-                print(f"Row {idx} error: {e}")
+                error_count += 1
+                print(f"[import_courses] Row {idx} error: {e}")
                 continue
+        
+        print(f"[import_courses] 匯入完成: 成功 {imported_count}, 失敗 {error_count}")
         
         return jsonify({
             'success': True, 
@@ -1335,6 +1361,10 @@ def import_courses():
         })
         
     except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"[import_courses] 匯入失敗: {e}")
+        print(f"[import_courses] 詳細錯誤: {error_detail}")
         return jsonify({'success': False, 'message': f'匯入失敗: {str(e)}'})
 
 def get_department_name(dept_code):
