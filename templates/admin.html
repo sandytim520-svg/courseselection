@@ -154,6 +154,36 @@
                 <!-- 篩選面板容器 -->
                 <div id="adminFilterPanelContainer"></div>
                 
+                <!-- 課程內容分類複選框 -->
+                <div class="category-row">
+                    <label>課程內容分類：</label>
+                    <div class="category-checkboxes">
+                        <label><input type="checkbox" name="adminCategory" value="體育"> 體育</label>
+                        <label><input type="checkbox" name="adminCategory" value="服務課程"> 服務課程</label>
+                        <label><input type="checkbox" name="adminCategory" value="全英語授課"> 全英語授課</label>
+                        <label><input type="checkbox" name="adminCategory" value="EMI全英語授課" checked> EMI全英語授課</label>
+                        <label><input type="checkbox" name="adminCategory" value="同步遠距教學"> 同步遠距教學</label>
+                        <label><input type="checkbox" name="adminCategory" value="非同步遠距教學"> 非同步遠距教學</label>
+                        <label><input type="checkbox" name="adminCategory" value="混合式遠距教學"> 混合式遠距教學</label>
+                        <label><input type="checkbox" name="adminCategory" value="遠距教學課程"> 遠距教學課程</label>
+                        <label><input type="checkbox" name="adminCategory" value="遠距輔助課程"> 遠距輔助課程</label>
+                    </div>
+                </div>
+                
+                <!-- 星期複選框 -->
+                <div class="weekday-row">
+                    <label>星期：</label>
+                    <div class="weekday-checkboxes">
+                        <label><input type="checkbox" name="adminWeekday" value="1"> 週一</label>
+                        <label><input type="checkbox" name="adminWeekday" value="2"> 週二</label>
+                        <label><input type="checkbox" name="adminWeekday" value="3"> 週三</label>
+                        <label><input type="checkbox" name="adminWeekday" value="4"> 週四</label>
+                        <label><input type="checkbox" name="adminWeekday" value="5"> 週五</label>
+                        <label><input type="checkbox" name="adminWeekday" value="6"> 週六</label>
+                        <label><input type="checkbox" name="adminWeekday" value="7"> 週日</label>
+                    </div>
+                </div>
+                
                 <!-- 篩選選項 -->
                 <div class="filter-row">
                     <label>系所：</label>
@@ -496,70 +526,122 @@
          Modal: 編輯帳號資料
          ======================================== -->
     <div id="editAccountModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-figma-account">
             <div class="modal-header">
-                <h3>👤 帳號資料</h3>
+                <h3 id="editAccountModalTitle">編輯學生帳號</h3>
                 <button class="close-btn" onclick="closeEditAccountModal()">✖</button>
             </div>
             <div class="modal-body">
                 <form id="editAccountForm" onsubmit="submitEditAccount(event)">
                     <input type="hidden" id="editAccountId">
+                    <input type="hidden" id="editAccountRoleHidden" value="student">
                     
-                    <div class="account-profile">
-                        <div class="profile-avatar-edit">
-                            <div class="profile-avatar" id="editAccountAvatarDisplay">🐱</div>
-                            <div class="avatar-selector">
-                                <span class="avatar-option" data-avatar="🐱" onclick="selectEditAvatar(this)">🐱</span>
-                                <span class="avatar-option" data-avatar="🐶" onclick="selectEditAvatar(this)">🐶</span>
-                                <span class="avatar-option" data-avatar="🐰" onclick="selectEditAvatar(this)">🐰</span>
-                                <span class="avatar-option" data-avatar="🐼" onclick="selectEditAvatar(this)">🐼</span>
-                                <span class="avatar-option" data-avatar="🦊" onclick="selectEditAvatar(this)">🦊</span>
-                                <span class="avatar-option" data-avatar="🐨" onclick="selectEditAvatar(this)">🐨</span>
-                                <span class="avatar-option" data-avatar="🦁" onclick="selectEditAvatar(this)">🦁</span>
-                                <span class="avatar-option" data-avatar="🐯" onclick="selectEditAvatar(this)">🐯</span>
-                                <span class="avatar-option" data-avatar="🐸" onclick="selectEditAvatar(this)">🐸</span>
-                                <span class="avatar-option" data-avatar="🐵" onclick="selectEditAvatar(this)">🐵</span>
-                                <span class="avatar-option" data-avatar="🦄" onclick="selectEditAvatar(this)">🦄</span>
-                                <span class="avatar-option" data-avatar="🐲" onclick="selectEditAvatar(this)">🐲</span>
-                            </div>
-                            <input type="hidden" id="editAccountAvatar" value="🐱">
+                    <!-- 大頭貼區域 -->
+                    <div class="avatar-display-area">
+                        <div class="avatar-large-circle" id="editAccountAvatarDisplay">🐱</div>
+                    </div>
+                    
+                    <!-- 小頭貼選擇器 -->
+                    <div class="avatar-selector-row">
+                        <span class="avatar-option-sm" data-avatar="🐱" onclick="selectEditAvatar(this)">🐱</span>
+                        <span class="avatar-option-sm" data-avatar="🐶" onclick="selectEditAvatar(this)">🐶</span>
+                        <span class="avatar-option-sm" data-avatar="🐰" onclick="selectEditAvatar(this)">🐰</span>
+                        <span class="avatar-option-sm" data-avatar="🐼" onclick="selectEditAvatar(this)">🐼</span>
+                        <span class="avatar-option-sm" data-avatar="🦊" onclick="selectEditAvatar(this)">🦊</span>
+                        <span class="avatar-option-sm" data-avatar="🐨" onclick="selectEditAvatar(this)">🐨</span>
+                        <span class="avatar-option-sm" data-avatar="🦁" onclick="selectEditAvatar(this)">🦁</span>
+                        <span class="avatar-option-sm" data-avatar="🐯" onclick="selectEditAvatar(this)">🐯</span>
+                        <span class="avatar-option-sm" data-avatar="🐸" onclick="selectEditAvatar(this)">🐸</span>
+                        <span class="avatar-option-sm" data-avatar="🐵" onclick="selectEditAvatar(this)">🐵</span>
+                        <span class="avatar-option-sm" data-avatar="🦄" onclick="selectEditAvatar(this)">🦄</span>
+                        <span class="avatar-option-sm" data-avatar="🐲" onclick="selectEditAvatar(this)">🐲</span>
+                    </div>
+                    <input type="hidden" id="editAccountAvatar" value="🐱">
+                    
+                    <!-- 學生專用欄位 -->
+                    <div id="editStudentFields">
+                        <div class="form-group">
+                            <label>姓名 *</label>
+                            <input type="text" id="editAccountName" required placeholder="請輸入姓名">
                         </div>
-                        <div class="profile-info">
-                            <div class="form-group">
-                                <label>姓名：</label>
-                                <input type="text" id="editAccountName" required>
+                        
+                        <div class="form-group">
+                            <label>學號 *</label>
+                            <input type="text" id="editAccountStudentId" required placeholder="請輸入學號">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>系所</label>
+                            <input type="text" id="editAccountDepartment" placeholder="請輸入系所">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>班級</label>
+                            <input type="text" id="editAccountClass" placeholder="請輸入班級">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>電話</label>
+                            <input type="tel" id="editAccountPhone" placeholder="請輸入手機號碼">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>電子郵件</label>
+                            <input type="email" id="editAccountEmail" placeholder="請輸入電子郵件">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>帳號 *</label>
+                            <input type="text" id="editAccountUsername" required placeholder="請輸入帳號">
+                        </div>
+                        
+                        <div class="form-group password-group">
+                            <label>密碼</label>
+                            <div class="password-row">
+                                <span class="password-mask">••••••••</span>
+                                <button type="button" class="btn-reset-password" onclick="resetAccountPassword()">將密碼改回預設</button>
                             </div>
-                            
-                            <div class="form-group">
-                                <label>學號：</label>
-                                <input type="text" id="editAccountStudentId">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>系所：</label>
-                                <input type="text" id="editAccountDepartment">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>班級：</label>
-                                <input type="text" id="editAccountClass">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>帳號：</label>
-                                <input type="text" id="editAccountUsername" required>
-                            </div>
-                            
-                            <div class="form-group password-group">
-                                <label>密碼：</label>
-                                <span id="editAccountPassword">******</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 管理員專用欄位 -->
+                    <div id="editAdminFields" style="display: none;">
+                        <div class="form-group">
+                            <label>姓名 *</label>
+                            <input type="text" id="editAdminName" required placeholder="請輸入姓名">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>ID *</label>
+                            <input type="text" id="editAdminId" required placeholder="請輸入ID">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>電話</label>
+                            <input type="tel" id="editAdminPhone" placeholder="請輸入手機號碼">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>電子郵件</label>
+                            <input type="email" id="editAdminEmail" placeholder="請輸入電子郵件">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>帳號 *</label>
+                            <input type="text" id="editAdminUsername" required placeholder="請輸入帳號">
+                        </div>
+                        
+                        <div class="form-group password-group">
+                            <label>密碼</label>
+                            <div class="password-row">
+                                <span class="password-mask">••••••••</span>
                                 <button type="button" class="btn-reset-password" onclick="resetAccountPassword()">將密碼改回預設</button>
                             </div>
                         </div>
                     </div>
                     
                     <div class="modal-footer">
-                        <button type="button" class="btn-back" onclick="closeEditAccountModal()">返回</button>
+                        <button type="button" class="btn-cancel" onclick="closeEditAccountModal()">取消</button>
                         <button type="submit" class="btn-submit">儲存</button>
                     </div>
                 </form>
