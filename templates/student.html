@@ -63,8 +63,8 @@
             </button>
             
             <div class="mascot" onclick="showProfileModal()" style="cursor: pointer;" title="個人檔案">
-                <div class="mascot-icon">🥣</div>
-                <p>粥預選</p>
+                <div class="mascot-icon" id="studentAvatar">🐱</div>
+                <p id="studentName">學生</p>
             </div>
         </div>
     </nav>
@@ -242,9 +242,9 @@
             </div>
             <div class="modal-body profile-menu">
                 <div class="profile-card">
-                    <div class="profile-avatar">🥣</div>
-                    <div class="profile-name" id="profileDisplayName">粥預選</div>
-                    <div class="profile-id" id="profileDisplayId">ID：-</div>
+                    <div class="profile-avatar" id="profileModalAvatar">🐱</div>
+                    <div class="profile-name" id="profileDisplayName">學生</div>
+                    <div class="profile-id" id="profileDisplayId">學號：-</div>
                 </div>
                 
                 <div class="profile-actions">
@@ -306,7 +306,22 @@
                         </div>
                         
                         <div class="profile-avatar-section">
-                            <div class="profile-avatar-large">🥣</div>
+                            <div class="profile-avatar-large" id="editProfileAvatarDisplay">🐱</div>
+                            <div class="avatar-selector-small">
+                                <span class="avatar-option-sm" data-avatar="🐱" onclick="selectStudentAvatar(this)">🐱</span>
+                                <span class="avatar-option-sm" data-avatar="🐶" onclick="selectStudentAvatar(this)">🐶</span>
+                                <span class="avatar-option-sm" data-avatar="🐰" onclick="selectStudentAvatar(this)">🐰</span>
+                                <span class="avatar-option-sm" data-avatar="🐼" onclick="selectStudentAvatar(this)">🐼</span>
+                                <span class="avatar-option-sm" data-avatar="🦊" onclick="selectStudentAvatar(this)">🦊</span>
+                                <span class="avatar-option-sm" data-avatar="🐨" onclick="selectStudentAvatar(this)">🐨</span>
+                                <span class="avatar-option-sm" data-avatar="🦁" onclick="selectStudentAvatar(this)">🦁</span>
+                                <span class="avatar-option-sm" data-avatar="🐯" onclick="selectStudentAvatar(this)">🐯</span>
+                                <span class="avatar-option-sm" data-avatar="🐸" onclick="selectStudentAvatar(this)">🐸</span>
+                                <span class="avatar-option-sm" data-avatar="🐵" onclick="selectStudentAvatar(this)">🐵</span>
+                                <span class="avatar-option-sm" data-avatar="🦄" onclick="selectStudentAvatar(this)">🦄</span>
+                                <span class="avatar-option-sm" data-avatar="🐲" onclick="selectStudentAvatar(this)">🐲</span>
+                            </div>
+                            <input type="hidden" id="editProfileAvatar" value="🐱">
                         </div>
                     </div>
                     
