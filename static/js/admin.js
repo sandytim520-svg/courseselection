@@ -691,7 +691,7 @@ function displayStudents(students) {
                 <button class="delete-account-btn" onclick="event.stopPropagation(); deleteAccount(${user.id}, '${user.username}')" title="刪除帳號">✖</button>
                 <div class="account-avatar-emoji">${avatar}</div>
                 <div class="account-name">${user.name || user.username}</div>
-                <div class="account-id">學號：${user.student_id || user.username}</div>
+                <div class="account-id">ID : ${user.student_id || user.username}</div>
             </div>
         `;
     });
@@ -798,6 +798,9 @@ async function handleAccountSubmit(e) {
 // ========================================
 function selectAvatar(element) {
     // 移除其他選中狀態
+    document.querySelectorAll('.avatar-option-sm').forEach(el => {
+        el.classList.remove('selected');
+    });
     document.querySelectorAll('.avatar-option').forEach(el => {
         el.classList.remove('selected');
     });
@@ -805,16 +808,21 @@ function selectAvatar(element) {
     element.classList.add('selected');
     // 更新隱藏欄位
     document.getElementById('accountAvatar').value = element.dataset.avatar;
+    // 更新大頭貼顯示
+    const avatarDisplay = document.getElementById('accountAvatarDisplay');
+    if (avatarDisplay) {
+        avatarDisplay.textContent = element.dataset.avatar;
+    }
 }
 
 // ========================================
 // 功能：刪除帳號
 // ========================================
-async function deleteAccount(userId, username) {
+async function deleteAccount(username) {
     if (!confirm(`確定要刪除帳號 ${username} 嗎？`)) return;
     
     try {
-        const response = await fetch(`/api/users/${userId}`, {
+        const response = await fetch(`/api/users/${username}`, {
             method: 'DELETE'
         });
         const result = await response.json();
