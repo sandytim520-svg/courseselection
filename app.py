@@ -2,9 +2,8 @@
 # 北護課程查詢系統 - Flask後端程式 (完整版)
 # 支援從Excel匯入的真實課程資料
 # ==========================================================
-import os
+
 from flask import Flask, request, jsonify, session, render_template, redirect
-from create_database import init_db, check_users
 import sqlite3
 import os
 from datetime import datetime
@@ -689,17 +688,25 @@ def delete_course(course_id):
 # ========================================
 # 主程式入口
 # ========================================
-
-
 if __name__ == '__main__':
-    init_db()
-    check_users()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
     
-    # 這是關鍵：取得 Render 指派的 Port，如果沒有就用 10000
-    port = int(os.environ.get("PORT", 10000))
+    # 顯示資料庫統計
+    conn = get_db()
+    course_count = conn.execute('SELECT COUNT(*) as count FROM courses').fetchone()['count']
+    user_count = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
+    conn.close()
     
-    print(f"啟動伺服器於 Port {port}...")
+    print(f'📊 資料庫統計:')
+    print(f'   課程數: {course_count} 筆')
+    print(f'   使用者: {user_count} 人')
+    print('📍 本地網址: http://127.0.0.1:5000')
+    print('📝 測試帳號:')
+    print('   學生 - student1 / pass123')
+    print('   管理員 - admin / admin123')
+    print('=' * 60)
+    print()
     
-    # host='0.0.0.0' 代表允許外部連線 (Render 才能連)
-    app.run(host='0.0.0.0', port=port)
-    
+    # 啟動Flask應用
+    app.run(host='0.0.0.0', port=5000, debug=True)
