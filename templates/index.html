@@ -113,57 +113,69 @@
     </div>
     
     <!-- ========================================
-         Modal: 忘記密碼 - 驗證
+         Modal: 忘記密碼 - 驗證帳號 (Figma設計)
          ======================================== -->
     <div id="forgotPasswordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🔑 忘記密碼</h3>
-                <button class="close-btn" onclick="closeForgotPassword()">✖</button>
+        <div class="modal-content modal-figma">
+            <div class="modal-header-figma">
+                <div class="modal-title-with-icon">
+                    <span class="modal-icon">🔒</span>
+                    <h3>忘記密碼</h3>
+                </div>
+                <button class="btn-back-figma" onclick="closeForgotPassword()">返回</button>
             </div>
-            <div class="modal-body">
-                <p class="modal-hint">請輸入您的學號/ID 和手機號碼進行驗證</p>
-                <div class="form-group">
-                    <label>學號/ID：</label>
-                    <input type="text" id="forgotStudentId" placeholder="請輸入學號或ID">
-                </div>
-                <div class="form-group">
-                    <label>手機號碼：</label>
-                    <input type="tel" id="forgotPhone" placeholder="請輸入手機號碼">
-                </div>
-                <div id="forgotMessage" class="message"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeForgotPassword()">取消</button>
-                    <button type="button" class="btn-submit" onclick="verifyForgotPassword()">驗證</button>
+            <div class="modal-body-figma">
+                <div class="modal-card">
+                    <h4 class="card-title">驗證帳號</h4>
+                    <p class="card-hint">請輸入您的學號/ID 和手機號碼進行驗證</p>
+                    
+                    <div class="form-group-figma">
+                        <label>學號/ID：</label>
+                        <input type="text" id="forgotStudentId" placeholder="請輸入學號/ID">
+                    </div>
+                    
+                    <div class="form-group-figma">
+                        <label>手機號碼：</label>
+                        <input type="tel" id="forgotPhone" placeholder="請輸入手機號碼">
+                    </div>
+                    
+                    <div id="forgotMessage" class="message"></div>
+                    
+                    <button type="button" class="btn-confirm-figma" onclick="verifyForgotPassword()">確定</button>
                 </div>
             </div>
         </div>
     </div>
     
     <!-- ========================================
-         Modal: 忘記密碼 - 重設密碼
+         Modal: 忘記密碼 - 重設密碼 (Figma設計)
          ======================================== -->
     <div id="resetPasswordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🔐 重設密碼</h3>
-                <button class="close-btn" onclick="closeResetPassword()">✖</button>
+        <div class="modal-content modal-figma">
+            <div class="modal-header-figma">
+                <div class="modal-title-with-icon">
+                    <span class="modal-icon">🔒</span>
+                    <h3>更新密碼</h3>
+                </div>
+                <button class="btn-back-figma" onclick="closeResetPassword()">返回</button>
             </div>
-            <div class="modal-body">
-                <p class="modal-hint" id="resetUserName">您好！請設定新密碼</p>
-                <input type="hidden" id="resetUserId">
-                <div class="form-group">
-                    <label>新密碼：</label>
-                    <input type="password" id="resetNewPassword" placeholder="請輸入新密碼">
-                </div>
-                <div class="form-group">
-                    <label>再次輸入密碼：</label>
-                    <input type="password" id="resetConfirmPassword" placeholder="請再次輸入新密碼">
-                </div>
-                <div id="resetMessage" class="message"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeResetPassword()">取消</button>
-                    <button type="button" class="btn-submit" onclick="submitResetPassword()">確定</button>
+            <div class="modal-body-figma">
+                <div class="modal-card">
+                    <input type="hidden" id="resetUserId">
+                    
+                    <div class="form-group-figma">
+                        <label>新密碼：</label>
+                        <input type="password" id="resetNewPassword" placeholder="請輸入新密碼">
+                    </div>
+                    
+                    <div class="form-group-figma">
+                        <label>再次輸入新密碼：</label>
+                        <input type="password" id="resetConfirmPassword" placeholder="請再次輸入新密碼">
+                    </div>
+                    
+                    <div id="resetMessage" class="message"></div>
+                    
+                    <button type="button" class="btn-confirm-figma" onclick="submitResetPassword()">確定</button>
                 </div>
             </div>
         </div>
@@ -242,8 +254,8 @@
                     loginBtn.disabled = false;
                 }
             } catch (error) {
-                // 網路錯誤
-                messageElement.textContent = '✗ 登入失敗，請檢查網路連線';
+                // 網路錯誤 - 改善錯誤訊息
+                messageElement.textContent = '✗ 登入失敗：' + (error.message || '請檢查網路連線');
                 messageElement.className = 'message error';
                 loginBtn.textContent = '登入';
                 loginBtn.disabled = false;
@@ -297,7 +309,6 @@
                     closeForgotPassword();
                     // 顯示重設密碼視窗
                     document.getElementById('resetUserId').value = result.user_id;
-                    document.getElementById('resetUserName').textContent = `您好，${result.name}！請設定新密碼`;
                     document.getElementById('resetNewPassword').value = '';
                     document.getElementById('resetConfirmPassword').value = '';
                     document.getElementById('resetMessage').textContent = '';
