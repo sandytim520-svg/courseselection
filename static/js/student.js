@@ -1036,4 +1036,141 @@ function closeScheduleModal(event) {
     }
 }
 
+// ========================================
+// 個人檔案功能
+// ========================================
+let userProfile = null;
+
+// 顯示個人檔案主選單
+async function showProfileModal() {
+    // 先載入個人資料
+    try {
+        const response = await fetch('/api/profile');
+        const data = await response.json();
+        
+        if (data.success) {
+            userProfile = data.profile;
+            document.getElementById('profileDisplayName').textContent = userProfile.name || '粥預選';
+            document.getElementById('profileDisplayId').textContent = `ID：${userProfile.student_id || userProfile.username}`;
+        }
+    } catch (error) {
+        console.error('載入個人資料失敗:', error);
+    }
+    
+    document.getElementById('profileModal').style.display = 'flex';
+}
+
+function closeProfileModal() {
+    document.getElementById('profileModal').style.display = 'none';
+}
+
+// 顯示修改檔案 modal
+async function showEditProfileModal() {
+    closeProfileModal();
+    
+    // 載入最新資料
+    try {
+        const response = await fetch('/api/profile');
+        const data = await response.json();
+        
+        if (data.success) {
+            userProfile = data.profile;
+            document.getElementById('editProfileName').textContent = userProfile.name || '-';
+            document.getElementById('editProfileStudentId').textContent = userProfile.student_id || '-';
+            document.getElementById('editProfileDepartment').textContent = userProfile.department || '-';
+            document.getElementById('editProfileClass').textContent = userProfile.class_name || '-';
+            document.getElementById('editProfilePhone').value = userProfile.phone || '';
+            document.getElementById('editProfileEmail').value = userProfile.email || '';
+        }
+    } catch (error) {
+        console.error('載入個人資料失敗:', error);
+    }
+    
+    document.getElementById('editProfileModal').style.display = 'flex';
+}
+
+function closeEditProfileModal() {
+    document.getElementById('editProfileModal').style.display = 'none';
+}
+
+async function submitEditProfile(event) {
+    event.preventDefault();
+    
+    const data = {
+        phone: document.getElementById('editProfilePhone').value,
+        email: document.getElementById('editProfileEmail').value
+    };
+    
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('個人資料更新成功！');
+            closeEditProfileModal();
+        } else {
+            alert('更新失敗：' + result.message);
+        }
+    } catch (error) {
+        console.error('更新個人資料失敗:', error);
+        alert('更新失敗，請稍後再試');
+    }
+}
+
+// 顯示變更密碼 modal
+function showChangePasswordModal() {
+    closeProfileModal();
+    document.getElementById('changePasswordModal').style.display = 'flex';
+    document.getElementById('oldPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+}
+
+function closeChangePasswordModal() {
+    document.getElementById('changePasswordModal').style.display = 'none';
+}
+
+async function submitChangePassword(event) {
+    event.preventDefault();
+    
+    const oldPassword = document.getElementById('oldPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        alert('新密碼與確認密碼不一致！');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/change-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                old_password: oldPassword,
+                new_password: newPassword,
+                confirm_password: confirmPassword
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('密碼變更成功！');
+            closeChangePasswordModal();
+        } else {
+            alert('密碼變更失敗：' + result.message);
+        }
+    } catch (error) {
+        console.error('變更密碼錯誤:', error);
+        alert('變更密碼失敗，請稍後再試');
+    }
+}
+
 console.log('✅ 篩選面板功能已載入');
+console.log('✅ 個人檔案功能已載入');
