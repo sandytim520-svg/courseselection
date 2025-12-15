@@ -25,11 +25,32 @@ window.onload = function() {
     console.log('✅ 管理者頁面載入完成');
     loadDepartments();
     loadAccounts();
+    loadAdminProfile();
     
     // 設置表單提交事件
     document.getElementById('courseForm').addEventListener('submit', handleCourseSubmit);
     document.getElementById('accountForm').addEventListener('submit', handleAccountSubmit);
 };
+
+// ========================================
+// 功能：載入管理者個人資料
+// ========================================
+async function loadAdminProfile() {
+    try {
+        const response = await fetch('/api/profile');
+        const data = await response.json();
+        
+        if (data.success && data.profile) {
+            const profile = data.profile;
+            // 更新 sidebar 的頭貼和姓名
+            document.getElementById('adminAvatar').textContent = profile.avatar || '🧑‍💼';
+            document.getElementById('adminName').textContent = profile.name || '管理員';
+            console.log('✅ 管理者資料載入成功');
+        }
+    } catch (error) {
+        console.error('❌ 載入管理者資料失敗:', error);
+    }
+}
 
 // ========================================
 // 功能：載入系所列表
@@ -641,9 +662,10 @@ async function loadAccounts() {
         const response = await fetch('/api/users');
         const data = await response.json();
         
-        if (data.success && data.users) {
-            displayAccounts(data.users);
-            console.log(`✅ 載入 ${data.users.length} 個帳號`);
+        if (data.success) {
+            displayStudents(data.students || []);
+            displayAdmins(data.admins || []);
+            console.log(`✅ 載入 ${(data.students || []).length} 個學生, ${(data.admins || []).length} 個管理員`);
         }
     } catch (error) {
         console.error('❌ 載入帳號失敗:', error);
@@ -651,22 +673,19 @@ async function loadAccounts() {
 }
 
 // ========================================
-// 功能：顯示帳號卡片
+// 功能：顯示學生帳號卡片
 // ========================================
-function displayAccounts(users) {
-    const container = document.getElementById('accountsGrid');
+function displayStudents(students) {
+    const container = document.getElementById('studentsGrid');
     
-    if (!users || users.length === 0) {
-        container.innerHTML = '<p class="no-results">尚無帳號資料</p>';
+    if (!students || students.length === 0) {
+        container.innerHTML = '<p class="no-results">尚無學生帳號</p>';
         return;
     }
     
-    // 卡通人物表情符號
-    const avatars = ['🧑‍🎓', '👨‍🎓', '👩‍🎓', '🐙', '🐌', '⭐'];
-    
     let html = '';
-    users.forEach((user, index) => {
-        const avatar = avatars[index % avatars.length];
+    students.forEach((user) => {
+        const avatar = user.avatar || '🐱';
         html += `
             <div class="account-card" onclick="editAccount(${user.id})" style="cursor: pointer;">
                 <button class="delete-account-btn" onclick="event.stopPropagation(); deleteAccount(${user.id}, '${user.username}')" title="刪除帳號">✖</button>
@@ -678,6 +697,44 @@ function displayAccounts(users) {
     });
     
     container.innerHTML = html;
+}
+
+// ========================================
+// 功能：顯示管理員帳號卡片
+// ========================================
+function displayAdmins(admins) {
+    const container = document.getElementById('adminsGrid');
+    
+    if (!admins || admins.length === 0) {
+        container.innerHTML = '<p class="no-results">尚無管理員帳號</p>';
+        return;
+    }
+    
+    let html = '';
+    admins.forEach((user) => {
+        const avatar = user.avatar || '🧑‍💼';
+        html += `
+            <div class="account-card" onclick="editAccount(${user.id})" style="cursor: pointer;">
+                <button class="delete-account-btn" onclick="event.stopPropagation(); deleteAccount(${user.id}, '${user.username}')" title="刪除帳號">✖</button>
+                <div class="account-avatar-emoji">${avatar}</div>
+                <div class="account-name">${user.name || user.username}</div>
+                <div class="account-id">ID : ${user.username}</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// ========================================
+// 功能：顯示帳號卡片 (保留向後兼容)
+// ========================================
+function displayAccounts(users) {
+    // 分開學生和管理員
+    const students = users.filter(u => u.role === 'student');
+    const admins = users.filter(u => u.role === 'admin');
+    displayStudents(students);
+    displayAdmins(admins);
 }
 
 // ========================================
@@ -708,7 +765,9 @@ async function handleAccountSubmit(e) {
         username: document.getElementById('accountUsername').value,
         password: document.getElementById('accountPassword').value,
         name: document.getElementById('accountName').value,
-        role: document.getElementById('accountRole').value
+        role: document.getElementById('accountRole').value,
+        phone: document.getElementById('accountPhone').value,
+        avatar: document.getElementById('accountAvatar').value || '🐱'
     };
     
     try {
@@ -732,6 +791,20 @@ async function handleAccountSubmit(e) {
         console.error('❌ 新增帳號失敗:', error);
         alert('操作失敗，請稍後再試');
     }
+}
+
+// ========================================
+// 功能：選擇頭貼
+// ========================================
+function selectAvatar(element) {
+    // 移除其他選中狀態
+    document.querySelectorAll('.avatar-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    // 添加選中狀態
+    element.classList.add('selected');
+    // 更新隱藏欄位
+    document.getElementById('accountAvatar').value = element.dataset.avatar;
 }
 
 // ========================================
@@ -1057,6 +1130,8 @@ async function editAccount(userId) {
             document.getElementById('editAccountDepartment').value = user.department || '';
             document.getElementById('editAccountClass').value = user.class_name || '';
             document.getElementById('editAccountUsername').value = user.username || '';
+            document.getElementById('editAccountAvatarDisplay').textContent = user.avatar || '🐱';
+            document.getElementById('editAccountAvatar').value = user.avatar || '🐱';
             
             document.getElementById('editAccountModal').style.display = 'flex';
         }
@@ -1064,6 +1139,13 @@ async function editAccount(userId) {
         console.error('載入帳號資料失敗:', error);
         alert('載入帳號資料失敗');
     }
+}
+
+// 編輯帳號時選擇頭貼
+function selectEditAvatar(element) {
+    const avatar = element.dataset.avatar;
+    document.getElementById('editAccountAvatarDisplay').textContent = avatar;
+    document.getElementById('editAccountAvatar').value = avatar;
 }
 
 function closeEditAccountModal() {
@@ -1081,7 +1163,8 @@ async function submitEditAccount(event) {
         student_id: document.getElementById('editAccountStudentId').value,
         department: document.getElementById('editAccountDepartment').value,
         class_name: document.getElementById('editAccountClass').value,
-        username: document.getElementById('editAccountUsername').value
+        username: document.getElementById('editAccountUsername').value,
+        avatar: document.getElementById('editAccountAvatar').value || '🐱'
     };
     
     try {
