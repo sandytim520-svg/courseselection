@@ -9,6 +9,28 @@ import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
+# ============================================
+# 檢查並建立資料庫
+# ============================================
+def init_database():
+    """如果資料庫不存在，就建立它"""
+    if not os.path.exists('database.db'):
+        print("=" * 50)
+        print("偵測到資料庫不存在，開始初始化...")
+        print("=" * 50)
+        try:
+            # 執行 create_database.py
+            import create_database
+            print("✓ 資料庫建立成功！")
+        except Exception as e:
+            print(f"✗ 資料庫建立失敗: {e}")
+            sys.exit(1)
+    else:
+        print("✓ 資料庫已存在")
+
+# 在 Flask app 啟動前先初始化
+init_database()
+
 app = Flask(__name__)
 app.secret_key = 'ntunhs_course_system_2024_secret_key'
 
