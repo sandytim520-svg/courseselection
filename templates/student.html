@@ -143,7 +143,20 @@
                 <!-- 篩選面板容器 -->
                 <div id="filterPanelContainer"></div>
                 
-                <!-- 第二行：系所/年級/課別 (原有下拉選單,保持顯示) -->
+                <!-- 第二行：系所/年級/課別 -->
+                <div class="filter-row">
+                    <label>星期：</label>
+                    <div class="weekday-checkboxes">
+                        <label><input type="checkbox" name="weekday" value="1"> 週一</label>
+                        <label><input type="checkbox" name="weekday" value="2"> 週二</label>
+                        <label><input type="checkbox" name="weekday" value="3"> 週三</label>
+                        <label><input type="checkbox" name="weekday" value="4"> 週四</label>
+                        <label><input type="checkbox" name="weekday" value="5"> 週五</label>
+                        <label><input type="checkbox" name="weekday" value="6"> 週六</label>
+                        <label><input type="checkbox" name="weekday" value="7"> 週日</label>
+                    </div>
+                </div>
+                
                 <div class="filter-row">
                     <label>系所：</label>
                     <select id="departmentSelect" class="form-select">
@@ -174,15 +187,17 @@
                     <button class="btn-search" onclick="searchCourses()">
                         🔍 查詢
                     </button>
-                    <button class="btn-clear" onclick="clearSearch()">
-                        ✖ 清除
+                    <button class="btn-clear" onclick="clearFilters()">
+                        ✕ 清除
                     </button>
                 </div>
             </div>
             
-            <!-- 搜尋結果區 -->
-            <div id="searchResults" class="results-container">
-                <p class="no-results">請輸入搜尋條件查詢課程</p>
+            <!-- 結果區 -->
+            <div class="result-container">
+                <div id="searchResult" class="search-result">
+                    <p class="no-result">請輸入搜尋條件並查詢課程</p>
+                </div>
             </div>
         </section>
         
@@ -190,9 +205,9 @@
              Section 2: 收藏清單
              ======================================== -->
         <section id="favoritesSection" class="content-section">
-            <h2 class="section-title">❤️ 收藏清單</h2>
-            <div id="favoritesList">
-                <p class="no-results">尚無收藏課程</p>
+            <h2 class="section-title">❤️ 我的收藏</h2>
+            <div id="favoritesList" class="courses-grid">
+                <p class="no-result">尚無收藏課程</p>
             </div>
         </section>
         
@@ -200,16 +215,12 @@
              Section 3: 預選課表
              ======================================== -->
         <section id="preselectSection" class="content-section">
-            <h2 class="section-title">📋 模擬課表</h2>
-            
-            <!-- 課表視覺化 -->
+            <h2 class="section-title">📅 預選課表</h2>
             <div class="schedule-container">
-                <div class="schedule-title">模擬課表</div>
                 <table class="schedule-table">
                     <thead>
                         <tr>
-                            <th class="schedule-header">節次</th>
-                            <th class="schedule-header">時間</th>
+                            <th class="schedule-header time-col">節次</th>
                             <th class="schedule-header">星期一</th>
                             <th class="schedule-header">星期二</th>
                             <th class="schedule-header">星期三</th>
@@ -262,109 +273,135 @@
     </div>
     
     <!-- ========================================
-         Modal: 修改檔案
+         Modal: 修改檔案 (Figma設計)
          ======================================== -->
     <div id="editProfileModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>📝 個人檔案</h3>
+        <div class="modal-content modal-figma-profile">
+            <div class="modal-header-figma">
+                <div class="modal-title-with-icon">
+                    <span class="modal-icon">📝</span>
+                    <h3>個人檔案</h3>
+                </div>
                 <button class="close-btn" onclick="closeEditProfileModal()">✖</button>
             </div>
-            <div class="modal-body">
-                <form id="editProfileForm" onsubmit="submitEditProfile(event)">
-                    <div class="profile-edit-container">
-                        <div class="profile-info-section">
-                            <div class="form-group readonly">
-                                <label>姓名：</label>
-                                <span id="editProfileName">-</span>
+            <div class="modal-body-figma">
+                <div class="modal-card-profile">
+                    <!-- 大頭貼區域 -->
+                    <div class="avatar-display-area">
+                        <div class="avatar-large-circle" id="editProfileAvatarDisplay">🐱</div>
+                    </div>
+                    
+                    <!-- 小頭貼選擇器 -->
+                    <div class="avatar-selector-row">
+                        <span class="avatar-option-sm" data-avatar="🐱" onclick="selectStudentAvatar(this)">🐱</span>
+                        <span class="avatar-option-sm" data-avatar="🐶" onclick="selectStudentAvatar(this)">🐶</span>
+                        <span class="avatar-option-sm" data-avatar="🐰" onclick="selectStudentAvatar(this)">🐰</span>
+                        <span class="avatar-option-sm" data-avatar="🐼" onclick="selectStudentAvatar(this)">🐼</span>
+                        <span class="avatar-option-sm" data-avatar="🦊" onclick="selectStudentAvatar(this)">🦊</span>
+                        <span class="avatar-option-sm" data-avatar="🐨" onclick="selectStudentAvatar(this)">🐨</span>
+                        <span class="avatar-option-sm" data-avatar="🦁" onclick="selectStudentAvatar(this)">🦁</span>
+                        <span class="avatar-option-sm" data-avatar="🐯" onclick="selectStudentAvatar(this)">🐯</span>
+                        <span class="avatar-option-sm" data-avatar="🐸" onclick="selectStudentAvatar(this)">🐸</span>
+                        <span class="avatar-option-sm" data-avatar="🐵" onclick="selectStudentAvatar(this)">🐵</span>
+                        <span class="avatar-option-sm" data-avatar="🦄" onclick="selectStudentAvatar(this)">🦄</span>
+                        <span class="avatar-option-sm" data-avatar="🐲" onclick="selectStudentAvatar(this)">🐲</span>
+                    </div>
+                    <input type="hidden" id="editProfileAvatar" value="🐱">
+                    
+                    <!-- 表單欄位 - 兩欄式 -->
+                    <form id="editProfileForm" onsubmit="submitEditProfile(event)">
+                        <div class="form-grid-2col">
+                            <div class="form-group-figma">
+                                <label>姓名:</label>
+                                <input type="text" id="editProfileName" readonly class="readonly-input">
                             </div>
                             
-                            <div class="form-group readonly">
-                                <label>學號：</label>
-                                <span id="editProfileStudentId">-</span>
+                            <div class="form-group-figma">
+                                <label>學號:</label>
+                                <input type="text" id="editProfileStudentId" readonly class="readonly-input">
                             </div>
                             
-                            <div class="form-group readonly">
-                                <label>系所：</label>
-                                <span id="editProfileDepartment">-</span>
+                            <div class="form-group-figma">
+                                <label>系所:</label>
+                                <input type="text" id="editProfileDepartment" readonly class="readonly-input">
                             </div>
                             
-                            <div class="form-group readonly">
-                                <label>班級：</label>
-                                <span id="editProfileClass">-</span>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>電話：</label>
-                                <input type="tel" id="editProfilePhone" placeholder="請輸入電話">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>電子郵件：</label>
-                                <input type="email" id="editProfileEmail" placeholder="請輸入電子郵件">
+                            <div class="form-group-figma">
+                                <label>班級:</label>
+                                <input type="text" id="editProfileClass" readonly class="readonly-input">
                             </div>
                         </div>
                         
-                        <div class="profile-avatar-section">
-                            <div class="profile-avatar-large" id="editProfileAvatarDisplay">🐱</div>
-                            <div class="avatar-selector-small">
-                                <span class="avatar-option-sm" data-avatar="🐱" onclick="selectStudentAvatar(this)">🐱</span>
-                                <span class="avatar-option-sm" data-avatar="🐶" onclick="selectStudentAvatar(this)">🐶</span>
-                                <span class="avatar-option-sm" data-avatar="🐰" onclick="selectStudentAvatar(this)">🐰</span>
-                                <span class="avatar-option-sm" data-avatar="🐼" onclick="selectStudentAvatar(this)">🐼</span>
-                                <span class="avatar-option-sm" data-avatar="🦊" onclick="selectStudentAvatar(this)">🦊</span>
-                                <span class="avatar-option-sm" data-avatar="🐨" onclick="selectStudentAvatar(this)">🐨</span>
-                                <span class="avatar-option-sm" data-avatar="🦁" onclick="selectStudentAvatar(this)">🦁</span>
-                                <span class="avatar-option-sm" data-avatar="🐯" onclick="selectStudentAvatar(this)">🐯</span>
-                                <span class="avatar-option-sm" data-avatar="🐸" onclick="selectStudentAvatar(this)">🐸</span>
-                                <span class="avatar-option-sm" data-avatar="🐵" onclick="selectStudentAvatar(this)">🐵</span>
-                                <span class="avatar-option-sm" data-avatar="🦄" onclick="selectStudentAvatar(this)">🦄</span>
-                                <span class="avatar-option-sm" data-avatar="🐲" onclick="selectStudentAvatar(this)">🐲</span>
-                            </div>
-                            <input type="hidden" id="editProfileAvatar" value="🐱">
+                        <div class="form-group-figma">
+                            <label>電話:</label>
+                            <input type="tel" id="editProfilePhone" placeholder="請輸入學號/ID">
                         </div>
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <button type="button" class="btn-cancel" onclick="closeEditProfileModal()">取消</button>
-                        <button type="submit" class="btn-submit">儲存</button>
-                    </div>
-                </form>
+                        
+                        <div class="form-group-figma">
+                            <label>電子郵件:</label>
+                            <input type="email" id="editProfileEmail" placeholder="請輸入學號/ID">
+                        </div>
+                        
+                        <div class="modal-footer-figma">
+                            <button type="button" class="btn-cancel-figma" onclick="closeEditProfileModal()">取消</button>
+                            <button type="submit" class="btn-save-figma">儲存</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
     
     <!-- ========================================
-         Modal: 變更密碼
+         Modal: 變更密碼 (Figma設計)
          ======================================== -->
     <div id="changePasswordModal" class="modal">
-        <div class="modal-content modal-small">
-            <div class="modal-header">
-                <h3>🔒 變更密碼</h3>
-                <button class="close-btn" onclick="closeChangePasswordModal()">✖</button>
+        <div class="modal-content modal-figma-password">
+            <div class="modal-header-figma">
+                <div class="modal-title-with-icon">
+                    <span class="modal-icon">🔒</span>
+                    <h3>更新密碼</h3>
+                </div>
+                <button class="btn-back-figma" onclick="closeChangePasswordModal()">返回</button>
             </div>
-            <div class="modal-body">
-                <form id="changePasswordForm" onsubmit="submitChangePassword(event)">
-                    <div class="form-group">
-                        <label>舊密碼：</label>
-                        <input type="password" id="oldPassword" required placeholder="請輸入舊密碼">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>新密碼：</label>
-                        <input type="password" id="newPassword" required placeholder="請輸入新密碼">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>再次輸入密碼：</label>
-                        <input type="password" id="confirmPassword" required placeholder="請輸入新密碼">
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <button type="button" class="btn-back" onclick="closeChangePasswordModal()">返回</button>
-                        <button type="submit" class="btn-submit">確定</button>
-                    </div>
-                </form>
+            <div class="modal-body-figma">
+                <div class="modal-card">
+                    <form id="changePasswordForm" onsubmit="submitChangePassword(event)">
+                        <div class="form-group-figma">
+                            <label>舊密碼：</label>
+                            <input type="password" id="oldPassword" required placeholder="請輸入舊密碼">
+                        </div>
+                        
+                        <div class="form-group-figma">
+                            <label>新密碼：</label>
+                            <input type="password" id="newPassword" required placeholder="請輸入新密碼">
+                        </div>
+                        
+                        <div class="form-group-figma">
+                            <label>再次輸入新密碼：</label>
+                            <input type="password" id="confirmPassword" required placeholder="請再次輸入新密碼">
+                        </div>
+                        
+                        <div id="passwordMessage" class="message"></div>
+                        
+                        <button type="submit" class="btn-confirm-figma">確定</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         Modal: 課程詳情
+         ======================================== -->
+    <div id="courseDetailModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="courseDetailTitle">課程詳情</h3>
+                <button class="close-btn" onclick="closeCourseDetailModal()">✖</button>
+            </div>
+            <div class="modal-body" id="courseDetailContent">
+                <!-- 動態填入 -->
             </div>
         </div>
     </div>
