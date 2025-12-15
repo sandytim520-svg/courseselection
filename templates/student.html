@@ -143,20 +143,7 @@
                 <!-- 篩選面板容器 -->
                 <div id="filterPanelContainer"></div>
                 
-                <!-- 第二行：系所/年級/課別 -->
-                <div class="filter-row">
-                    <label>星期：</label>
-                    <div class="weekday-checkboxes">
-                        <label><input type="checkbox" name="weekday" value="1"> 週一</label>
-                        <label><input type="checkbox" name="weekday" value="2"> 週二</label>
-                        <label><input type="checkbox" name="weekday" value="3"> 週三</label>
-                        <label><input type="checkbox" name="weekday" value="4"> 週四</label>
-                        <label><input type="checkbox" name="weekday" value="5"> 週五</label>
-                        <label><input type="checkbox" name="weekday" value="6"> 週六</label>
-                        <label><input type="checkbox" name="weekday" value="7"> 週日</label>
-                    </div>
-                </div>
-                
+                <!-- 篩選選項 -->
                 <div class="filter-row">
                     <label>系所：</label>
                     <select id="departmentSelect" class="form-select">
@@ -282,7 +269,7 @@
                     <span class="modal-icon">📝</span>
                     <h3>個人檔案</h3>
                 </div>
-                <button class="close-btn" onclick="closeEditProfileModal()">✖</button>
+                <button class="btn-back-figma" onclick="backToProfileModal()">返回</button>
             </div>
             <div class="modal-body-figma">
                 <div class="modal-card-profile">
@@ -362,7 +349,7 @@
                     <span class="modal-icon">🔒</span>
                     <h3>更新密碼</h3>
                 </div>
-                <button class="btn-back-figma" onclick="closeChangePasswordModal()">返回</button>
+                <button class="btn-back-figma" onclick="backToProfileModal()">返回</button>
             </div>
             <div class="modal-body-figma">
                 <div class="modal-card">
