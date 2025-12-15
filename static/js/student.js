@@ -15,28 +15,7 @@ window.onload = function() {
     console.log('✅ 學生頁面載入完成');
     loadDepartments();
     loadMyCourses();
-    loadStudentProfile();
 };
-
-// ========================================
-// 功能：載入學生個人資料（頭貼和姓名）
-// ========================================
-async function loadStudentProfile() {
-    try {
-        const response = await fetch('/api/profile');
-        const data = await response.json();
-        
-        if (data.success && data.profile) {
-            const profile = data.profile;
-            // 更新 sidebar 的頭貼和姓名
-            document.getElementById('studentAvatar').textContent = profile.avatar || '🐱';
-            document.getElementById('studentName').textContent = profile.name || '學生';
-            console.log('✅ 學生資料載入成功');
-        }
-    } catch (error) {
-        console.error('❌ 載入學生資料失敗:', error);
-    }
-}
 
 // ========================================
 // 功能：載入系所列表
@@ -1071,9 +1050,8 @@ async function showProfileModal() {
         
         if (data.success) {
             userProfile = data.profile;
-            document.getElementById('profileModalAvatar').textContent = userProfile.avatar || '🐱';
-            document.getElementById('profileDisplayName').textContent = userProfile.name || '學生';
-            document.getElementById('profileDisplayId').textContent = `學號：${userProfile.student_id || userProfile.username}`;
+            document.getElementById('profileDisplayName').textContent = userProfile.name || '粥預選';
+            document.getElementById('profileDisplayId').textContent = `ID：${userProfile.student_id || userProfile.username}`;
         }
     } catch (error) {
         console.error('載入個人資料失敗:', error);
@@ -1103,8 +1081,6 @@ async function showEditProfileModal() {
             document.getElementById('editProfileClass').textContent = userProfile.class_name || '-';
             document.getElementById('editProfilePhone').value = userProfile.phone || '';
             document.getElementById('editProfileEmail').value = userProfile.email || '';
-            document.getElementById('editProfileAvatarDisplay').textContent = userProfile.avatar || '🐱';
-            document.getElementById('editProfileAvatar').value = userProfile.avatar || '🐱';
         }
     } catch (error) {
         console.error('載入個人資料失敗:', error);
@@ -1122,8 +1098,7 @@ async function submitEditProfile(event) {
     
     const data = {
         phone: document.getElementById('editProfilePhone').value,
-        email: document.getElementById('editProfileEmail').value,
-        avatar: document.getElementById('editProfileAvatar').value || '🐱'
+        email: document.getElementById('editProfileEmail').value
     };
     
     try {
@@ -1138,9 +1113,6 @@ async function submitEditProfile(event) {
         if (result.success) {
             alert('個人資料更新成功！');
             closeEditProfileModal();
-            // 更新 sidebar 的頭貼
-            document.getElementById('studentAvatar').textContent = data.avatar;
-            document.getElementById('profileModalAvatar').textContent = data.avatar;
         } else {
             alert('更新失敗：' + result.message);
         }
@@ -1169,9 +1141,31 @@ async function submitChangePassword(event) {
     const oldPassword = document.getElementById('oldPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    const messageEl = document.getElementById('passwordMessage');
+    
+    // 清除之前的訊息
+    if (messageEl) {
+        messageEl.textContent = '';
+        messageEl.className = 'message';
+    }
+    
+    if (!newPassword || !confirmPassword) {
+        if (messageEl) {
+            messageEl.textContent = '請輸入新密碼';
+            messageEl.className = 'message error';
+        } else {
+            alert('請輸入新密碼');
+        }
+        return;
+    }
     
     if (newPassword !== confirmPassword) {
-        alert('新密碼與確認密碼不一致！');
+        if (messageEl) {
+            messageEl.textContent = '新密碼與確認密碼不一致';
+            messageEl.className = 'message error';
+        } else {
+            alert('新密碼與確認密碼不一致！');
+        }
         return;
     }
     
@@ -1189,32 +1183,34 @@ async function submitChangePassword(event) {
         const result = await response.json();
         
         if (result.success) {
-            alert('密碼變更成功！');
-            closeChangePasswordModal();
+            if (messageEl) {
+                messageEl.textContent = '密碼變更成功！';
+                messageEl.className = 'message success';
+                setTimeout(() => {
+                    closeChangePasswordModal();
+                }, 1000);
+            } else {
+                alert('密碼變更成功！');
+                closeChangePasswordModal();
+            }
         } else {
-            alert('密碼變更失敗：' + result.message);
+            if (messageEl) {
+                messageEl.textContent = result.message || '密碼變更失敗';
+                messageEl.className = 'message error';
+            } else {
+                alert('密碼變更失敗：' + result.message);
+            }
         }
     } catch (error) {
         console.error('變更密碼錯誤:', error);
-        alert('變更密碼失敗，請稍後再試');
+        if (messageEl) {
+            messageEl.textContent = '變更密碼失敗，請稍後再試';
+            messageEl.className = 'message error';
+        } else {
+            alert('變更密碼失敗，請稍後再試');
+        }
     }
 }
 
 console.log('✅ 篩選面板功能已載入');
 console.log('✅ 個人檔案功能已載入');
-
-// ========================================
-// 功能：選擇頭貼（學生修改檔案用）
-// ========================================
-function selectStudentAvatar(element) {
-    const avatar = element.dataset.avatar;
-    document.getElementById('editProfileAvatarDisplay').textContent = avatar;
-    document.getElementById('editProfileAvatar').value = avatar;
-    
-    // 移除其他選中狀態
-    document.querySelectorAll('.avatar-option-sm').forEach(el => {
-        el.classList.remove('selected');
-    });
-    // 添加選中狀態
-    element.classList.add('selected');
-}
