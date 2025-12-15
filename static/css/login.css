@@ -336,6 +336,172 @@ body {
 }
 
 /* ========================================
+   Modal 基礎樣式
+   ======================================== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* ========================================
+   Figma 設計的 Modal 樣式
+   ======================================== */
+.modal-figma {
+    width: 420px;
+    padding: 0;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.modal-header-figma {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-title-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-icon {
+    font-size: 24px;
+}
+
+.modal-header-figma h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #5A6C57;
+    margin: 0;
+}
+
+.btn-back-figma {
+    padding: 8px 20px;
+    background: white;
+    border: 2px solid #5A6C57;
+    border-radius: 8px;
+    color: #5A6C57;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-back-figma:hover {
+    background: #5A6C57;
+    color: white;
+}
+
+.modal-body-figma {
+    padding: 24px;
+}
+
+.modal-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.card-hint {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 24px;
+}
+
+.form-group-figma {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group-figma label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.form-group-figma input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fafafa;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.form-group-figma input::placeholder {
+    color: #aaa;
+}
+
+.form-group-figma input:focus {
+    outline: none;
+    border-color: #5A6C57;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(90, 108, 87, 0.1);
+}
+
+.btn-confirm-figma {
+    width: auto;
+    min-width: 120px;
+    padding: 12px 32px;
+    margin-top: 16px;
+    background: #5A6C57;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-confirm-figma:hover {
+    background: #4A5C47;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(90, 108, 87, 0.3);
+}
+
+.modal-card .message {
+    margin: 16px 0;
+    padding: 12px;
+    font-size: 13px;
+}
+
+/* ========================================
    響應式設計
    ======================================== */
 @media (max-width: 1024px) {
@@ -378,6 +544,11 @@ body {
     .left-section, .right-section {
         padding: 40px 25px;
     }
+    
+    .modal-figma {
+        width: 95%;
+        max-width: 400px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -392,5 +563,13 @@ body {
     .links a {
         font-size: 14px;
         padding: 10px 20px;
+    }
+    
+    .modal-card {
+        padding: 20px;
+    }
+    
+    .card-title {
+        font-size: 18px;
     }
 }
