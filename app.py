@@ -1,41 +1,33 @@
 # ==========================================================
-# 北護課程查詢系統 - Flask後端程式 (完整版)
-# 支援從Excel匯入的真實課程資料
+# 北護課程查詢系統 - Flask後端程式 (PostgreSQL版)
+# 支援 Render PostgreSQL 資料庫
 # ==========================================================
 
 from flask import Flask, request, jsonify, session, render_template, redirect
-import sqlite3
 import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
+import pandas as pd
 
-# ============================================
-# 檢查並建立資料庫
-# ============================================
-def init_database():
-    """如果資料庫不存在，就建立它"""
-    if not os.path.exists('database.db'):
-        print("=" * 50)
-        print("偵測到資料庫不存在，開始初始化...")
-        print("=" * 50)
-        try:
-            # 執行 create_database.py
-            import create_database
-            print("✓ 資料庫建立成功！")
-        except Exception as e:
-            print(f"✗ 資料庫建立失敗: {e}")
-            sys.exit(1)
-    else:
-        print("✓ 資料庫已存在")
+# 判斷是否使用 PostgreSQL
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# 在 Flask app 啟動前先初始化
-init_database()
+if DATABASE_URL:
+    # PostgreSQL (Render)
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    USE_POSTGRES = True
+    # Render 的 DATABASE_URL 格式可能需要調整
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+else:
+    # 本地 SQLite
+    import sqlite3
+    USE_POSTGRES = False
+    DATABASE = 'database.db'
 
 app = Flask(__name__)
-app.secret_key = 'ntunhs_course_system_2024_secret_key'
-
-# 資料庫檔案路徑
-DATABASE = 'database.db'
+app.secret_key = os.environ.get('SECRET_KEY', 'ntunhs_course_system_2024_secret_key')
 
 # 檔案上傳設定
 UPLOAD_FOLDER = 'uploads'
@@ -52,9 +44,159 @@ if not os.path.exists(UPLOAD_FOLDER):
 # ========================================
 def get_db():
     """取得資料庫連接"""
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    if USE_POSTGRES:
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        return conn
+    else:
+        conn = sqlite3.connect(DATABASE)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+def execute_query(query, params=None, fetch=False, fetchone=False):
+    """執行查詢的通用函數"""
+    conn = get_db()
+    if USE_POSTGRES:
+        cursor = conn.cursor()
+        # PostgreSQL 使用 %s 而不是 ?
+        query = query.replace('?', '%s')
+        cursor.execute(query, params or ())
+        if fetchone:
+            result = cursor.fetchone()
+        elif fetch:
+            result = cursor.fetchall()
+        else:
+            result = cursor.lastrowid if hasattr(cursor, 'lastrowid') else None
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return result
+    else:
+        cursor = conn.cursor()
+        cursor.execute(query, params or ())
+        if fetchone:
+            result = cursor.fetchone()
+            result = dict(result) if result else None
+        elif fetch:
+            result = [dict(row) for row in cursor.fetchall()]
+        else:
+            result = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return result
+
+def init_db():
+    """初始化資料庫 - 創建表格和添加新欄位"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    if USE_POSTGRES:
+        # PostgreSQL 創建表格
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'student',
+                name TEXT DEFAULT '',
+                student_id TEXT DEFAULT '',
+                department TEXT DEFAULT '',
+                class_name TEXT DEFAULT '',
+                phone TEXT DEFAULT '',
+                email TEXT DEFAULT '',
+                avatar TEXT DEFAULT '🐱',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS courses (
+                id SERIAL PRIMARY KEY,
+                semester TEXT NOT NULL,
+                department TEXT NOT NULL,
+                grade TEXT,
+                course_code TEXT NOT NULL,
+                course_name TEXT NOT NULL,
+                course_name_en TEXT,
+                instructor TEXT,
+                credits REAL,
+                course_type TEXT,
+                classroom TEXT,
+                day_time TEXT,
+                weekday TEXT,
+                period TEXT,
+                capacity INTEGER DEFAULT 60,
+                enrolled INTEGER DEFAULT 0,
+                class_group TEXT,
+                remarks TEXT,
+                course_summary TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS enrollments (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                course_id INTEGER REFERENCES courses(id),
+                status TEXT DEFAULT 'enrolled',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # 嘗試添加 avatar 欄位
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '🐱'")
+        except:
+            pass
+            
+    else:
+        # SQLite
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'student',
+                name TEXT DEFAULT '',
+                student_id TEXT DEFAULT '',
+                department TEXT DEFAULT '',
+                class_name TEXT DEFAULT '',
+                phone TEXT DEFAULT '',
+                email TEXT DEFAULT '',
+                avatar TEXT DEFAULT '🐱',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # 嘗試添加新欄位
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN name TEXT DEFAULT ''")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN student_id TEXT DEFAULT ''")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN department TEXT DEFAULT ''")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN class_name TEXT DEFAULT ''")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN phone TEXT DEFAULT ''")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '🐱'")
+        except: pass
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+# 初始化資料庫
+init_db()
 
 # ========================================
 # 路由: 首頁 (登入頁面)
@@ -114,22 +256,26 @@ def login():
     if not username or not password:
         return jsonify({'success': False, 'message': '請輸入帳號和密碼'})
     
-    conn = get_db()
-    user = conn.execute('SELECT * FROM users WHERE username = ? AND password = ?',
-                       (username, password)).fetchone()
-    conn.close()
+    user = execute_query(
+        'SELECT * FROM users WHERE username = ? AND password = ?',
+        (username, password), fetchone=True
+    )
     
     if user:
         session['user_id'] = user['id']
         session['username'] = user['username']
         session['role'] = user['role']
+        session['name'] = user.get('name') or user['username']
+        session['avatar'] = user.get('avatar') or '🐱'
         
         return jsonify({
             'success': True,
             'message': '登入成功',
             'role': user['role'],
             'user_id': user['id'],
-            'username': user['username']
+            'username': user['username'],
+            'name': user.get('name') or user['username'],
+            'avatar': user.get('avatar') or '🐱'
         })
     else:
         return jsonify({'success': False, 'message': '帳號或密碼錯誤'})
@@ -144,17 +290,181 @@ def logout():
     return jsonify({'success': True, 'message': '登出成功'})
 
 # ========================================
+# API: 取得個人檔案
+# ========================================
+@app.route('/api/profile', methods=['GET'])
+def get_profile():
+    """取得個人檔案"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': '請先登入'})
+    
+    user = execute_query(
+        'SELECT id, username, role, name, student_id, department, class_name, phone, email, avatar FROM users WHERE id = ?',
+        (session['user_id'],), fetchone=True
+    )
+    
+    if user:
+        return jsonify({
+            'success': True,
+            'profile': {
+                'id': user['id'],
+                'username': user['username'],
+                'role': user['role'],
+                'name': user.get('name') or user['username'],
+                'student_id': user.get('student_id') or user['username'],
+                'department': user.get('department') or '',
+                'class_name': user.get('class_name') or '',
+                'phone': user.get('phone') or '',
+                'email': user.get('email') or '',
+                'avatar': user.get('avatar') or '🐱'
+            }
+        })
+    else:
+        return jsonify({'success': False, 'message': '找不到使用者'})
+
+# ========================================
+# API: 更新個人檔案 (學生可改電話、電子郵件、頭貼)
+# ========================================
+@app.route('/api/profile', methods=['PUT'])
+def update_profile():
+    """更新個人檔案"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': '請先登入'})
+    
+    data = request.json
+    phone = data.get('phone', '')
+    email = data.get('email', '')
+    avatar = data.get('avatar', '')
+    
+    if avatar:
+        execute_query(
+            'UPDATE users SET phone = ?, email = ?, avatar = ? WHERE id = ?',
+            (phone, email, avatar, session['user_id'])
+        )
+        session['avatar'] = avatar
+    else:
+        execute_query(
+            'UPDATE users SET phone = ?, email = ? WHERE id = ?',
+            (phone, email, session['user_id'])
+        )
+    
+    return jsonify({'success': True, 'message': '更新成功'})
+
+# ========================================
+# API: 變更密碼
+# ========================================
+@app.route('/api/change-password', methods=['POST'])
+def change_password():
+    """變更密碼"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': '請先登入'})
+    
+    data = request.json
+    old_password = data.get('old_password', '')
+    new_password = data.get('new_password', '')
+    confirm_password = data.get('confirm_password', '')
+    
+    if not old_password or not new_password:
+        return jsonify({'success': False, 'message': '請填寫所有欄位'})
+    
+    if new_password != confirm_password:
+        return jsonify({'success': False, 'message': '新密碼與確認密碼不一致'})
+    
+    user = execute_query(
+        'SELECT password FROM users WHERE id = ?',
+        (session['user_id'],), fetchone=True
+    )
+    
+    if user['password'] != old_password:
+        return jsonify({'success': False, 'message': '舊密碼錯誤'})
+    
+    execute_query(
+        'UPDATE users SET password = ? WHERE id = ?',
+        (new_password, session['user_id'])
+    )
+    
+    return jsonify({'success': True, 'message': '密碼變更成功'})
+
+# ========================================
+# API: 忘記密碼 - 驗證身份
+# ========================================
+@app.route('/api/forgot-password/verify', methods=['POST'])
+def forgot_password_verify():
+    """忘記密碼 - 驗證ID/學號和電話"""
+    data = request.json
+    student_id = data.get('student_id', '')
+    phone = data.get('phone', '')
+    
+    if not student_id or not phone:
+        return jsonify({'success': False, 'message': '請輸入學號和電話'})
+    
+    # 可以用 username 或 student_id 來查找
+    user = execute_query(
+        'SELECT id, username, name FROM users WHERE (username = ? OR student_id = ?) AND phone = ?',
+        (student_id, student_id, phone), fetchone=True
+    )
+    
+    if user:
+        return jsonify({
+            'success': True,
+            'message': '驗證成功',
+            'user_id': user['id'],
+            'name': user.get('name') or user['username']
+        })
+    else:
+        return jsonify({'success': False, 'message': '學號或電話錯誤'})
+
+# ========================================
+# API: 忘記密碼 - 重設密碼
+# ========================================
+@app.route('/api/forgot-password/reset', methods=['POST'])
+def forgot_password_reset():
+    """忘記密碼 - 重設密碼"""
+    data = request.json
+    user_id = data.get('user_id')
+    new_password = data.get('new_password', '')
+    confirm_password = data.get('confirm_password', '')
+    
+    if not user_id or not new_password:
+        return jsonify({'success': False, 'message': '請填寫所有欄位'})
+    
+    if new_password != confirm_password:
+        return jsonify({'success': False, 'message': '新密碼與確認密碼不一致'})
+    
+    execute_query(
+        'UPDATE users SET password = ? WHERE id = ?',
+        (new_password, user_id)
+    )
+    
+    return jsonify({'success': True, 'message': '密碼重設成功，請重新登入'})
+
+# ========================================
 # API: 取得系所列表
 # ========================================
 @app.route('/api/departments', methods=['GET'])
 def get_departments():
     """取得所有系所"""
-    conn = get_db()
-    departments = conn.execute('SELECT DISTINCT department FROM courses WHERE department IS NOT NULL ORDER BY department').fetchall()
-    conn.close()
+    departments = execute_query(
+        'SELECT DISTINCT department FROM courses WHERE department IS NOT NULL ORDER BY department',
+        fetch=True
+    )
     
     dept_list = [d['department'] for d in departments]
     return jsonify({'success': True, 'departments': dept_list})
+
+# ========================================
+# API: 取得學期列表
+# ========================================
+@app.route('/api/semesters', methods=['GET'])
+def get_semesters():
+    """取得所有學期"""
+    semesters = execute_query(
+        'SELECT DISTINCT semester FROM courses WHERE semester IS NOT NULL ORDER BY semester DESC',
+        fetch=True
+    )
+    
+    semester_list = [s['semester'] for s in semesters]
+    return jsonify({'success': True, 'semesters': semester_list})
 
 # ========================================
 # API: 搜尋課程
@@ -196,27 +506,29 @@ def search_courses():
         query += ' AND course_type = ?'
         params.append(course_type)
     
-    # 新增:星期篩選 - 使用 weekday 欄位
+    # 星期篩選
     if weekday:
         weekdays = weekday.split(',')
-        weekday_conditions = ' OR '.join(['weekday = ?' for _ in weekdays])
+        if USE_POSTGRES:
+            weekday_conditions = ' OR '.join(['weekday = %s' for _ in weekdays])
+        else:
+            weekday_conditions = ' OR '.join(['weekday = ?' for _ in weekdays])
         query += f' AND ({weekday_conditions})'
         params.extend(weekdays)
     
-    # 新增:節次篩選 - 精確匹配 period 欄位中的節次
+    # 節次篩選
     if period:
         periods = period.split(',')
         period_conditions = []
         for p in periods:
-            # 匹配節次：可能是 "3" 或 "3,4" 或 "2,3,4" 等格式
-            # 需要精確匹配數字，避免 "13" 匹配到 "1"
-            period_conditions.append("(',' || period || ',' LIKE ?)")
+            if USE_POSTGRES:
+                period_conditions.append("(',' || period || ',' LIKE %s)")
+            else:
+                period_conditions.append("(',' || period || ',' LIKE ?)")
             params.append(f'%,{p},%')
         query += f' AND ({" OR ".join(period_conditions)})'
     
-    # 新增:學制篩選 - 根據 course_code 第3-4碼判斷
-    # 14=四技, 12=二技, 33/23=二技(三年), 16/46/86=碩士班, 17/87=博士班
-    # 19=學士後系, 15=學士後多元專長, 18=學士後學位學程
+    # 學制篩選
     if degree:
         degrees = degree.split(',')
         degree_conditions = []
@@ -240,7 +552,7 @@ def search_courses():
         if degree_conditions:
             query += f' AND ({" OR ".join(degree_conditions)})'
     
-    # 新增:課程內容分類篩選 - 根據 remarks 欄位判斷
+    # 課程內容分類篩選
     if category:
         categories = category.split(',')
         category_conditions = []
@@ -268,16 +580,12 @@ def search_courses():
     
     query += ' ORDER BY semester DESC, course_code'
     
-    conn = get_db()
-    courses = conn.execute(query, params).fetchall()
-    conn.close()
-    
-    courses_list = [dict(course) for course in courses]
+    courses = execute_query(query, params, fetch=True)
     
     return jsonify({
         'success': True,
-        'items': courses_list,
-        'count': len(courses_list)
+        'items': courses,
+        'count': len(courses)
     })
 
 # ========================================
@@ -291,259 +599,98 @@ def enroll_course():
     
     data = request.json
     course_id = data.get('course_id')
-    status = data.get('status', 'enrolled')  # 'favorite' 或 'enrolled'
+    status = data.get('status', 'enrolled')
     
     if not course_id:
         return jsonify({'success': False, 'message': '缺少課程ID'})
     
-    conn = get_db()
-    c = conn.cursor()
-    
-    # 檢查是否已存在
-    existing = c.execute('SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?',
-                        (session['user_id'], course_id)).fetchone()
+    existing = execute_query(
+        'SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?',
+        (session['user_id'], course_id), fetchone=True
+    )
     
     if existing:
-        # 更新狀態
-        c.execute('UPDATE enrollments SET status = ? WHERE user_id = ? AND course_id = ?',
-                 (status, session['user_id'], course_id))
+        execute_query(
+            'UPDATE enrollments SET status = ? WHERE user_id = ? AND course_id = ?',
+            (status, session['user_id'], course_id)
+        )
         message = '更新成功'
     else:
-        # 新增記錄
-        c.execute('INSERT INTO enrollments (user_id, course_id, status) VALUES (?, ?, ?)',
-                 (session['user_id'], course_id, status))
+        execute_query(
+            'INSERT INTO enrollments (user_id, course_id, status) VALUES (?, ?, ?)',
+            (session['user_id'], course_id, status)
+        )
         message = '加入成功'
-    
-    conn.commit()
-    conn.close()
     
     return jsonify({'success': True, 'message': message})
 
 # ========================================
-# API: 移除課程
+# API: 取得收藏/預選清單
+# ========================================
+@app.route('/api/enrollments', methods=['GET'])
+def get_enrollments():
+    """取得使用者的收藏和預選課程"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': '請先登入'})
+    
+    status = request.args.get('status', '')
+    
+    if status:
+        query = '''
+            SELECT e.id as enrollment_id, e.status, c.* 
+            FROM enrollments e 
+            JOIN courses c ON e.course_id = c.id 
+            WHERE e.user_id = ? AND e.status = ?
+            ORDER BY c.semester DESC, c.course_code
+        '''
+        enrollments = execute_query(query, (session['user_id'], status), fetch=True)
+    else:
+        query = '''
+            SELECT e.id as enrollment_id, e.status, c.* 
+            FROM enrollments e 
+            JOIN courses c ON e.course_id = c.id 
+            WHERE e.user_id = ?
+            ORDER BY c.semester DESC, c.course_code
+        '''
+        enrollments = execute_query(query, (session['user_id'],), fetch=True)
+    
+    return jsonify({
+        'success': True,
+        'items': enrollments,
+        'count': len(enrollments)
+    })
+
+# ========================================
+# API: 刪除收藏/預選
 # ========================================
 @app.route('/api/enroll/<int:enrollment_id>', methods=['DELETE'])
-def remove_enrollment(enrollment_id):
-    """移除收藏或選課"""
+def delete_enrollment(enrollment_id):
+    """刪除收藏或預選"""
     if 'user_id' not in session:
         return jsonify({'success': False, 'message': '請先登入'})
     
-    conn = get_db()
-    c = conn.cursor()
+    execute_query(
+        'DELETE FROM enrollments WHERE id = ? AND user_id = ?',
+        (enrollment_id, session['user_id'])
+    )
     
-    # 確認是本人的記錄
-    enrollment = c.execute('SELECT * FROM enrollments WHERE id = ? AND user_id = ?',
-                          (enrollment_id, session['user_id'])).fetchone()
-    
-    if not enrollment:
-        conn.close()
-        return jsonify({'success': False, 'message': '找不到此記錄'})
-    
-    # 刪除記錄
-    c.execute('DELETE FROM enrollments WHERE id = ?', (enrollment_id,))
-    
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'success': True, 'message': '移除成功'})
+    return jsonify({'success': True, 'message': '刪除成功'})
 
 # ========================================
-# API: 取得我的收藏/預選課程
+# API: 取得單一課程
 # ========================================
-@app.route('/api/my-courses', methods=['GET'])
-def get_my_courses():
-    """取得使用者的課程列表"""
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'message': '請先登入'})
+@app.route('/api/courses/<int:course_id>', methods=['GET'])
+def get_course(course_id):
+    """取得單一課程資料"""
+    course = execute_query(
+        'SELECT * FROM courses WHERE id = ?',
+        (course_id,), fetchone=True
+    )
     
-    status = request.args.get('status', 'favorite')
-    
-    conn = get_db()
-    courses = conn.execute('''
-        SELECT e.id as enrollment_id, c.*, e.status, e.enrolled_at
-        FROM enrollments e
-        JOIN courses c ON e.course_id = c.id
-        WHERE e.user_id = ? AND e.status = ?
-        ORDER BY e.enrolled_at DESC
-    ''', (session['user_id'], status)).fetchall()
-    conn.close()
-    
-    courses_list = [dict(course) for course in courses]
-    
-    return jsonify({
-        'success': True,
-        'items': courses_list,
-        'count': len(courses_list)
-    })
-
-# ========================================
-# API: 取得所有課程 (管理者)
-# ========================================
-@app.route('/api/all-courses', methods=['GET'])
-def get_all_courses():
-    """取得所有課程 (管理者)"""
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return jsonify({'success': False, 'message': '權限不足'})
-    
-    semester = request.args.get('semester', '')
-    department = request.args.get('department', '')
-    
-    query = 'SELECT * FROM courses WHERE 1=1'
-    params = []
-    
-    if semester:
-        query += ' AND semester = ?'
-        params.append(semester)
-    
-    if department:
-        query += ' AND department = ?'
-        params.append(department)
-    
-    query += ' ORDER BY semester DESC, department, course_code'
-    
-    conn = get_db()
-    courses = conn.execute(query, params).fetchall()
-    conn.close()
-    
-    courses_list = [dict(course) for course in courses]
-    
-    return jsonify({
-        'success': True,
-        'courses': courses_list,
-        'count': len(courses_list)
-    })
-
-# ========================================
-# API: 取得使用者列表 (管理者)
-# ========================================
-@app.route('/api/users', methods=['GET'])
-def get_users():
-    """取得所有使用者"""
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return jsonify({'success': False, 'message': '權限不足'})
-    
-    conn = get_db()
-    users = conn.execute('SELECT id, username, role, created_at FROM users ORDER BY created_at DESC').fetchall()
-    conn.close()
-    
-    users_list = [dict(user) for user in users]
-    
-    return jsonify({'success': True, 'users': users_list})
-
-# ========================================
-# API: 新增使用者 (管理者)
-# ========================================
-@app.route('/api/users', methods=['POST'])
-def add_user():
-    """新增使用者"""
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return jsonify({'success': False, 'message': '權限不足'})
-    
-    data = request.json
-    
-    conn = get_db()
-    c = conn.cursor()
-    
-    try:
-        c.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-                  (data.get('username'), data.get('password'), 
-                   data.get('role', 'student')))
-        conn.commit()
-        conn.close()
-        return jsonify({'success': True, 'message': '帳號新增成功'})
-    except sqlite3.IntegrityError:
-        conn.close()
-        return jsonify({'success': False, 'message': '帳號已存在'})
-
-# ========================================
-# API: 刪除使用者 (管理者)
-# ========================================
-@app.route('/api/users/<username>', methods=['DELETE'])
-def delete_user(username):
-    """刪除使用者"""
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return jsonify({'success': False, 'message': '權限不足'})
-    
-    # 不能刪除自己
-    if username == session.get('username'):
-        return jsonify({'success': False, 'message': '不能刪除自己的帳號'})
-    
-    conn = get_db()
-    c = conn.cursor()
-    
-    # 取得使用者ID
-    user = c.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
-    
-    if not user:
-        conn.close()
-        return jsonify({'success': False, 'message': '使用者不存在'})
-    
-    # 刪除選課記錄
-    c.execute('DELETE FROM enrollments WHERE user_id = ?', (user['id'],))
-    # 刪除使用者
-    c.execute('DELETE FROM users WHERE username = ?', (username,))
-    
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'success': True, 'message': '帳號刪除成功'})
-
-# ========================================
-# API: 取得學期列表
-# ========================================
-@app.route('/api/semesters', methods=['GET'])
-def get_semesters():
-    """取得所有學期"""
-    conn = get_db()
-    semesters = conn.execute('SELECT DISTINCT semester FROM courses WHERE semester IS NOT NULL ORDER BY semester DESC').fetchall()
-    conn.close()
-    
-    semester_list = [s['semester'] for s in semesters]
-    return jsonify({'success': True, 'semesters': semester_list})
-
-# ========================================
-# API: 取得統計資料 (管理者)
-# ========================================
-@app.route('/api/stats', methods=['GET'])
-def get_stats():
-    """取得系統統計資料"""
-    if 'user_id' not in session or session.get('role') != 'admin':
-        return jsonify({'success': False, 'message': '權限不足'})
-    
-    conn = get_db()
-    
-    # 總課程數
-    total_courses = conn.execute('SELECT COUNT(*) as count FROM courses').fetchone()['count']
-    
-    # 總使用者數
-    total_users = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
-    
-    # 各學期課程數
-    semester_stats = conn.execute('''
-        SELECT semester, COUNT(*) as count 
-        FROM courses 
-        GROUP BY semester 
-        ORDER BY semester DESC
-    ''').fetchall()
-    
-    # 各系所課程數
-    dept_stats = conn.execute('''
-        SELECT department, COUNT(*) as count 
-        FROM courses 
-        GROUP BY department 
-        ORDER BY count DESC 
-        LIMIT 10
-    ''').fetchall()
-    
-    conn.close()
-    
-    return jsonify({
-        'success': True,
-        'total_courses': total_courses,
-        'total_users': total_users,
-        'semester_stats': [dict(s) for s in semester_stats],
-        'dept_stats': [dict(d) for d in dept_stats]
-    })
+    if course:
+        return jsonify({'success': True, 'course': course})
+    else:
+        return jsonify({'success': False, 'message': '課程不存在'})
 
 # ========================================
 # API: 新增課程 (管理者)
@@ -556,11 +703,6 @@ def add_course():
     
     data = request.json
     
-    # 驗證必填欄位
-    if not data.get('course_name') or not data.get('semester'):
-        return jsonify({'success': False, 'message': '請填寫必填欄位'})
-    
-    # 組合時間資訊
     day_time = ''
     weekday = data.get('weekday', '')
     period = data.get('period', '')
@@ -573,55 +715,30 @@ def add_course():
         elif day_str:
             day_time = day_str
     
-    conn = get_db()
-    c = conn.cursor()
+    execute_query('''
+        INSERT INTO courses (semester, department, grade, course_code, course_name, 
+                           instructor, credits, course_type, classroom, day_time, 
+                           weekday, period, capacity, class_group, remarks)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        data.get('semester', ''),
+        data.get('department', ''),
+        data.get('grade', ''),
+        data.get('course_code', ''),
+        data.get('course_name', ''),
+        data.get('instructor', ''),
+        data.get('credits', 0),
+        data.get('course_type', ''),
+        data.get('classroom', ''),
+        day_time,
+        weekday,
+        period,
+        data.get('capacity', 60),
+        data.get('class_group', ''),
+        data.get('remarks', '')
+    ))
     
-    try:
-        c.execute('''
-            INSERT INTO courses (
-                semester, department, grade, course_code, course_name,
-                instructor, credits, course_type, classroom, day_time,
-                weekday, period, capacity, class_group, remarks
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            data.get('semester', ''),
-            data.get('department', ''),
-            data.get('grade', ''),
-            data.get('course_code', ''),
-            data.get('course_name', ''),
-            data.get('instructor', ''),
-            float(data.get('credits', 0)),
-            data.get('course_type', ''),
-            data.get('classroom', ''),
-            day_time,
-            weekday,
-            period,
-            int(data.get('capacity', 60)),
-            data.get('class_group', ''),
-            data.get('remarks', '')
-        ))
-        conn.commit()
-        course_id = c.lastrowid
-        conn.close()
-        return jsonify({'success': True, 'message': '課程新增成功', 'id': course_id})
-    except Exception as e:
-        conn.close()
-        return jsonify({'success': False, 'message': f'新增失敗: {str(e)}'})
-
-# ========================================
-# API: 取得單一課程 (用於編輯)
-# ========================================
-@app.route('/api/courses/<int:course_id>', methods=['GET'])
-def get_course(course_id):
-    """取得單一課程資料"""
-    conn = get_db()
-    course = conn.execute('SELECT * FROM courses WHERE id = ?', (course_id,)).fetchone()
-    conn.close()
-    
-    if course:
-        return jsonify({'success': True, 'course': dict(course)})
-    else:
-        return jsonify({'success': False, 'message': '課程不存在'})
+    return jsonify({'success': True, 'message': '新增成功'})
 
 # ========================================
 # API: 更新課程 (管理者)
@@ -634,7 +751,6 @@ def update_course(course_id):
     
     data = request.json
     
-    # 組合時間資訊
     day_time = ''
     weekday = data.get('weekday', '')
     period = data.get('period', '')
@@ -647,41 +763,32 @@ def update_course(course_id):
         elif day_str:
             day_time = day_str
     
-    conn = get_db()
-    c = conn.cursor()
+    execute_query('''
+        UPDATE courses SET 
+            semester = ?, department = ?, grade = ?, course_code = ?, course_name = ?,
+            instructor = ?, credits = ?, course_type = ?, classroom = ?, day_time = ?,
+            weekday = ?, period = ?, capacity = ?, class_group = ?, remarks = ?
+        WHERE id = ?
+    ''', (
+        data.get('semester', ''),
+        data.get('department', ''),
+        data.get('grade', ''),
+        data.get('course_code', ''),
+        data.get('course_name', ''),
+        data.get('instructor', ''),
+        data.get('credits', 0),
+        data.get('course_type', ''),
+        data.get('classroom', ''),
+        day_time,
+        weekday,
+        period,
+        data.get('capacity', 60),
+        data.get('class_group', ''),
+        data.get('remarks', ''),
+        course_id
+    ))
     
-    try:
-        c.execute('''
-            UPDATE courses SET
-                semester = ?, department = ?, grade = ?, course_code = ?,
-                course_name = ?, instructor = ?, credits = ?, course_type = ?,
-                classroom = ?, day_time = ?, weekday = ?, period = ?,
-                capacity = ?, class_group = ?, remarks = ?
-            WHERE id = ?
-        ''', (
-            data.get('semester', ''),
-            data.get('department', ''),
-            data.get('grade', ''),
-            data.get('course_code', ''),
-            data.get('course_name', ''),
-            data.get('instructor', ''),
-            float(data.get('credits', 0)),
-            data.get('course_type', ''),
-            data.get('classroom', ''),
-            day_time,
-            weekday,
-            period,
-            int(data.get('capacity', 60)),
-            data.get('class_group', ''),
-            data.get('remarks', ''),
-            course_id
-        ))
-        conn.commit()
-        conn.close()
-        return jsonify({'success': True, 'message': '課程更新成功'})
-    except Exception as e:
-        conn.close()
-        return jsonify({'success': False, 'message': f'更新失敗: {str(e)}'})
+    return jsonify({'success': True, 'message': '更新成功'})
 
 # ========================================
 # API: 刪除課程 (管理者)
@@ -692,25 +799,300 @@ def delete_course(course_id):
     if 'user_id' not in session or session.get('role') != 'admin':
         return jsonify({'success': False, 'message': '權限不足'})
     
-    conn = get_db()
-    c = conn.cursor()
+    execute_query('DELETE FROM courses WHERE id = ?', (course_id,))
+    execute_query('DELETE FROM enrollments WHERE course_id = ?', (course_id,))
     
-    try:
-        # 先刪除相關的選課記錄
-        c.execute('DELETE FROM enrollments WHERE course_id = ?', (course_id,))
-        # 刪除課程
-        c.execute('DELETE FROM courses WHERE id = ?', (course_id,))
-        conn.commit()
-        conn.close()
-        return jsonify({'success': True, 'message': '課程刪除成功'})
-    except Exception as e:
-        conn.close()
-        return jsonify({'success': False, 'message': f'刪除失敗: {str(e)}'})
+    return jsonify({'success': True, 'message': '刪除成功'})
 
 # ========================================
-# 主程式入口
+# API: 取得所有使用者 (管理者)
+# ========================================
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    """取得所有使用者"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'message': '權限不足'})
+    
+    users = execute_query(
+        "SELECT id, username, role, name, student_id, department, class_name, phone, email, avatar FROM users",
+        fetch=True
+    )
+    
+    # 分成學生和管理員
+    students = [u for u in users if u['role'] == 'student']
+    admins = [u for u in users if u['role'] == 'admin']
+    
+    return jsonify({
+        'success': True,
+        'students': students,
+        'admins': admins,
+        'users': users
+    })
+
+# ========================================
+# API: 新增使用者 (管理者)
+# ========================================
+@app.route('/api/users', methods=['POST'])
+def create_user():
+    """新增使用者"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'message': '權限不足'})
+    
+    data = request.json
+    username = data.get('username', '')  # ID/學號
+    password = data.get('password', '')
+    name = data.get('name', '')
+    role = data.get('role', 'student')
+    phone = data.get('phone', '')
+    avatar = data.get('avatar', '🐱')
+    
+    if not username or not password:
+        return jsonify({'success': False, 'message': '請填寫必要欄位'})
+    
+    # 檢查是否已存在
+    existing = execute_query(
+        'SELECT id FROM users WHERE username = ?',
+        (username,), fetchone=True
+    )
+    
+    if existing:
+        return jsonify({'success': False, 'message': '此帳號已存在'})
+    
+    execute_query('''
+        INSERT INTO users (username, password, name, role, student_id, phone, avatar)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (username, password, name, role, username, phone, avatar))
+    
+    return jsonify({'success': True, 'message': '新增成功'})
+
+# ========================================
+# API: 取得單一使用者 (管理者)
+# ========================================
+@app.route('/api/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    """取得單一使用者"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'message': '權限不足'})
+    
+    user = execute_query(
+        "SELECT id, username, password, role, name, student_id, department, class_name, phone, email, avatar FROM users WHERE id = ?",
+        (user_id,), fetchone=True
+    )
+    
+    if user:
+        return jsonify({'success': True, 'user': user})
+    else:
+        return jsonify({'success': False, 'message': '找不到使用者'})
+
+# ========================================
+# API: 更新使用者 (管理者)
+# ========================================
+@app.route('/api/users/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    """更新使用者資料"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'message': '權限不足'})
+    
+    data = request.json
+    
+    execute_query('''
+        UPDATE users SET 
+            name = ?, student_id = ?, department = ?, class_name = ?, 
+            username = ?, phone = ?, email = ?, avatar = ?
+        WHERE id = ?
+    ''', (
+        data.get('name', ''),
+        data.get('student_id', ''),
+        data.get('department', ''),
+        data.get('class_name', ''),
+        data.get('username', ''),
+        data.get('phone', ''),
+        data.get('email', ''),
+        data.get('avatar', '🐱'),
+        user_id
+    ))
+    
+    return jsonify({'success': True, 'message': '更新成功'})
+
+# ========================================
+# API: 刪除使用者 (管理者)
+# ========================================
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    """刪除使用者"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'message': '權限不足'})
+    
+    execute_query('DELETE FROM enrollments WHERE user_id = ?', (user_id,))
+    execute_query('DELETE FROM users WHERE id = ?', (user_id,))
+    
+    return jsonify({'success': True, 'message': '刪除成功'})
+
+# ========================================
+# API: 重設密碼為預設 (管理者)
+# ========================================
+@app.route('/api/users/<int:user_id>/reset-password', methods=['POST'])
+def reset_user_password(user_id):
+    """重設使用者密碼為預設值"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'message': '權限不足'})
+    
+    default_password = 'pass123'
+    
+    execute_query(
+        'UPDATE users SET password = ? WHERE id = ?',
+        (default_password, user_id)
+    )
+    
+    return jsonify({'success': True, 'message': f'密碼已重設為預設值: {default_password}'})
+
+# ========================================
+# API: 匯入課程 (管理者)
+# ========================================
+@app.route('/api/import-courses', methods=['POST'])
+def import_courses():
+    """匯入課程 Excel 檔案"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'success': False, 'message': '權限不足'})
+    
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': '沒有選擇檔案'})
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': '沒有選擇檔案'})
+    
+    semester = request.form.get('semester', '')
+    if not semester:
+        return jsonify({'success': False, 'message': '請指定學期'})
+    
+    try:
+        if file.filename.endswith('.xls'):
+            df = pd.read_excel(file, header=3, engine='xlrd')
+        else:
+            df = pd.read_excel(file, header=3)
+        
+        imported_count = 0
+        
+        for idx, row in df.iterrows():
+            if idx == 0:
+                continue
+            
+            try:
+                course_code = str(row.iloc[3]) if pd.notna(row.iloc[3]) else ''
+                if not course_code or course_code == 'nan':
+                    continue
+                
+                dept_code = str(row.iloc[4]) if pd.notna(row.iloc[4]) else ''
+                department = get_department_name(dept_code)
+                
+                grade = str(row.iloc[7]) if pd.notna(row.iloc[7]) else ''
+                class_group = str(row.iloc[8]) if pd.notna(row.iloc[8]) else ''
+                course_name = str(row.iloc[9]) if pd.notna(row.iloc[9]) else ''
+                course_name_en = str(row.iloc[10]) if pd.notna(row.iloc[10]) else ''
+                instructor = str(row.iloc[11]) if pd.notna(row.iloc[11]) else ''
+                capacity = int(row.iloc[12]) if pd.notna(row.iloc[12]) else 0
+                credits = float(row.iloc[15]) if pd.notna(row.iloc[15]) else 0
+                course_type = str(row.iloc[19]) if pd.notna(row.iloc[19]) else ''
+                classroom = str(row.iloc[20]) if pd.notna(row.iloc[20]) else ''
+                weekday = str(row.iloc[21]) if pd.notna(row.iloc[21]) else ''
+                period = str(row.iloc[22]) if pd.notna(row.iloc[22]) else ''
+                remarks = str(row.iloc[23]) if pd.notna(row.iloc[23]) else ''
+                course_summary = str(row.iloc[24]) if pd.notna(row.iloc[24]) else ''
+                
+                day_map = {'1': '週一', '2': '週二', '3': '週三', '4': '週四', 
+                           '5': '週五', '6': '週六', '7': '週日'}
+                day_time = ''
+                if weekday:
+                    day_str = day_map.get(str(int(float(weekday))), '')
+                    if day_str:
+                        day_time = f"{day_str} {period}"
+                    weekday = str(int(float(weekday)))
+                
+                existing = execute_query(
+                    'SELECT id FROM courses WHERE semester = ? AND course_code = ? AND class_group = ?',
+                    (semester, course_code, class_group), fetchone=True
+                )
+                
+                if existing:
+                    execute_query('''
+                        UPDATE courses SET 
+                            department = ?, grade = ?, course_name = ?, course_name_en = ?,
+                            instructor = ?, credits = ?, course_type = ?, classroom = ?,
+                            day_time = ?, weekday = ?, period = ?, capacity = ?, 
+                            remarks = ?, course_summary = ?
+                        WHERE id = ?
+                    ''', (
+                        department, grade, course_name, course_name_en,
+                        instructor, credits, course_type, classroom,
+                        day_time, weekday, period, capacity,
+                        remarks, course_summary, existing['id']
+                    ))
+                else:
+                    execute_query('''
+                        INSERT INTO courses (semester, department, grade, course_code, course_name,
+                                           course_name_en, instructor, credits, course_type, classroom,
+                                           day_time, weekday, period, capacity, class_group, 
+                                           remarks, course_summary)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        semester, department, grade, course_code, course_name,
+                        course_name_en, instructor, credits, course_type, classroom,
+                        day_time, weekday, period, capacity, class_group,
+                        remarks, course_summary
+                    ))
+                
+                imported_count += 1
+                
+            except Exception as e:
+                print(f"Row {idx} error: {e}")
+                continue
+        
+        return jsonify({
+            'success': True, 
+            'message': f'成功匯入 {imported_count} 筆課程',
+            'count': imported_count
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'匯入失敗: {str(e)}'})
+
+def get_department_name(dept_code):
+    """根據系所代碼取得系所名稱"""
+    dept_map = {
+        '11120': '嬰幼兒保育系',
+        '11140': '嬰幼兒保育系',
+        '11170': '護理系博士班',
+        '21120': '高齡健康照護系',
+        '21140': '高齡健康照護系',
+        '24120': '長期照護系',
+        '24140': '長期照護系',
+        '24150': '學士後多元專長',
+        '30860': '健康事業管理系',
+        '31140': '健康事業管理系',
+        '31180': '學士後學位學程',
+        '33140': '護理系',
+        '33160': '護理系碩士班',
+        '43160': '人工智慧與健康大數據研究所',
+        '51140': '語言治療與聽力學系',
+        '51160': '語言治療與聽力學系碩士班',
+        '90100': '通識教育中心',
+        '90200': '體育室',
+    }
+    
+    if dept_code in dept_map:
+        return dept_map[dept_code]
+    
+    prefix4 = dept_code[:4] if len(dept_code) >= 4 else dept_code
+    for key, value in dept_map.items():
+        if key.startswith(prefix4):
+            return value
+    
+    return dept_code
+
+# ========================================
+# 啟動應用程式
 # ========================================
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(debug=True, host='0.0.0.0', port=port)
