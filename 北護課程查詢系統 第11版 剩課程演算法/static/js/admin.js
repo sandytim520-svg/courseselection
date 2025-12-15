@@ -1,0 +1,949 @@
+/* ==========================================================
+   北護課程查詢系統 - 管理者頁面JavaScript
+   功能: 課程管理、匯入課程、帳號管理
+   ========================================================== */
+
+// ========================================
+// 全域變數
+// ========================================
+let currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+let editingCourseId = null;
+
+// 篩選面板變數
+let adminCurrentFilterPanel = null;
+let adminSelectedFilters = {
+    weekday: [],
+    period: [],
+    degree: [],
+    category: []
+};
+
+// ========================================
+// 頁面載入時執行
+// ========================================
+window.onload = function() {
+    console.log('✅ 管理者頁面載入完成');
+    loadDepartments();
+    loadAccounts();
+    
+    // 設置表單提交事件
+    document.getElementById('courseForm').addEventListener('submit', handleCourseSubmit);
+    document.getElementById('accountForm').addEventListener('submit', handleAccountSubmit);
+};
+
+// ========================================
+// 功能：載入系所列表
+// ========================================
+async function loadDepartments() {
+    try {
+        const response = await fetch('/api/departments');
+        const data = await response.json();
+        
+        if (data.success && data.departments) {
+            const select = document.getElementById('adminDepartmentSelect');
+            data.departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                select.appendChild(option);
+            });
+            console.log('✅ 系所列表載入成功');
+        }
+    } catch (error) {
+        console.error('❌ 載入系所失敗:', error);
+    }
+}
+
+// ========================================
+// 功能：切換頁面Section
+// ========================================
+function showSection(section) {
+    // 隱藏所有section
+    document.querySelectorAll('.content-section').forEach(s => {
+        s.classList.remove('active');
+    });
+    
+    // 移除所有nav-item的active
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // 顯示選中的section
+    const sectionMap = {
+        'courses': 'coursesSection',
+        'import': 'importSection',
+        'accounts': 'accountsSection'
+    };
+    
+    const targetSection = document.getElementById(sectionMap[section]);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+    
+    // 標記選中的nav-item
+    if (event && event.target) {
+        const navItem = event.target.closest('.nav-item');
+        if (navItem) {
+            navItem.classList.add('active');
+        }
+    }
+    
+    // 載入對應資料
+    if (section === 'accounts') loadAccounts();
+    
+    console.log('📄 切換到:', section);
+}
+
+// ========================================
+// 功能：搜尋課程
+// ========================================
+async function adminSearchCourses() {
+    const keyword = document.getElementById('adminKeywordInput').value.trim();
+    const semester = document.getElementById('adminSemesterSelect').value;
+    const department = document.getElementById('adminDepartmentSelect').value;
+    const grade = document.getElementById('adminGradeSelect').value;
+    const type = document.getElementById('adminTypeSelect').value;
+    
+    // 建立查詢參數
+    let params = new URLSearchParams();
+    if (keyword) params.append('keyword', keyword);
+    if (semester) params.append('semester', semester);
+    if (department) params.append('department', department);
+    if (grade) params.append('grade', grade);
+    if (type) params.append('type', type);
+    
+    // 添加篩選面板的參數
+    if (adminSelectedFilters.weekday.length > 0) {
+        params.append('weekday', adminSelectedFilters.weekday.join(','));
+    }
+    if (adminSelectedFilters.period.length > 0) {
+        params.append('period', adminSelectedFilters.period.join(','));
+    }
+    if (adminSelectedFilters.degree.length > 0) {
+        params.append('degree', adminSelectedFilters.degree.join(','));
+    }
+    if (adminSelectedFilters.category.length > 0) {
+        params.append('category', adminSelectedFilters.category.join(','));
+    }
+    
+    console.log('🔍 管理者搜尋參數:', Object.fromEntries(params));
+    
+    try {
+        const response = await fetch(`/api/courses?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log(`✅ 找到 ${data.count} 筆課程`);
+            displayAdminResults(data.items);
+        } else {
+            displayAdminResults([]);
+        }
+    } catch (error) {
+        console.error('❌ 搜尋失敗:', error);
+        alert('搜尋失敗，請稍後再試');
+    }
+}
+
+// ========================================
+// 功能：顯示課程列表（管理者）
+// ========================================
+function displayAdminResults(courses) {
+    const container = document.getElementById('adminCoursesResults');
+    
+    if (!courses || courses.length === 0) {
+        container.innerHTML = '<p class="no-results">沒有找到符合的課程</p>';
+        return;
+    }
+    
+    let html = `
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>學期</th>
+                    <th>系所</th>
+                    <th>年級</th>          
+                    <th>課程名稱</th>
+                    <th>授課教師</th>
+                    <th>學分</th>
+                    <th>課別</th>
+                    <th>教室</th>
+                    <th>星期</th>
+                    <th>節次</th>
+                    <th>大綱</th>
+                    <th>編輯</th>
+                    <th>刪除</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    courses.forEach(course => {
+        // 解析星期
+        const dayMap = {'1': '一', '2': '二', '3': '三', '4': '四', 
+                       '5': '五', '6': '六', '7': '日'};
+        let weekdayDisplay = '';
+        if (course.weekday) {
+            weekdayDisplay = dayMap[course.weekday] || '';
+        } else if (course.day_time) {
+            const match = course.day_time.match(/週([一二三四五六日])/);
+            if (match) weekdayDisplay = match[1];
+        }
+        
+        // 解析節次
+        let periodDisplay = course.period || '';
+        if (!periodDisplay && course.day_time) {
+            const match = course.day_time.match(/(\d+[-,\d]*)/);
+            if (match) periodDisplay = match[1];
+        }
+        
+        html += `
+            <tr>
+                <td>${course.semester || ''}</td>
+                <td>${course.department || ''}</td>
+                <td>${course.grade || ''}</td>           
+                <td>${course.course_name || ''}</td>
+                <td>${course.instructor || ''}</td>
+                <td>${course.credits || ''}</td>
+                <td>${course.course_type || ''}</td>
+                <td>${course.classroom || ''}</td>
+                <td>${weekdayDisplay}</td>
+                <td>${periodDisplay}</td>
+                <td>
+                    <button class="btn-icon btn-outline" onclick="showCourseInfo(${course.id})" title="課程資訊">•••</button>
+                </td>
+                <td>
+                    <button class="btn-icon btn-edit" onclick="editCourse(${course.id})" title="編輯">✎</button>
+                </td>
+                <td>
+                    <button class="btn-icon btn-trash" onclick="deleteCourse(${course.id})" title="刪除">🗑</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// ========================================
+// 功能：顯示課程資訊 (大綱) - 管理者版
+// ========================================
+async function showCourseInfo(courseId) {
+    try {
+        const response = await fetch(`/api/courses/${courseId}`);
+        const data = await response.json();
+        
+        if (data.success && data.course) {
+            const course = data.course;
+            
+            // 格式化時間顯示
+            let timeDisplay = '';
+            if (course.weekday) {
+                const dayMap = {'1': '週一', '2': '週二', '3': '週三', '4': '週四', 
+                               '5': '週五', '6': '週六', '7': '週日'};
+                timeDisplay = dayMap[course.weekday] || '';
+                if (course.period) {
+                    const periodTimes = {
+                        '1': '08:10~09:00', '2': '09:10~10:00', '3': '10:10~11:00', '4': '11:10~12:00',
+                        '5': '12:40~13:30', '6': '13:40~14:30', '7': '14:40~15:30', '8': '15:40~16:30',
+                        '9': '16:40~17:30', '10': '17:40~18:30', '11': '18:35~19:25', '12': '19:30~20:20',
+                        '13': '20:25~21:15', '14': '21:20~22:10'
+                    };
+                    const periods = course.period.split(',');
+                    if (periods.length > 0) {
+                        const startTime = periodTimes[periods[0].trim()] ? periodTimes[periods[0].trim()].split('~')[0] : '';
+                        const endTime = periodTimes[periods[periods.length-1].trim()] ? periodTimes[periods[periods.length-1].trim()].split('~')[1] : '';
+                        timeDisplay += `，${course.period}節(${startTime}~${endTime})`;
+                    }
+                }
+            } else if (course.day_time) {
+                timeDisplay = course.day_time;
+            }
+            if (course.classroom) {
+                timeDisplay += `，${course.classroom}`;
+            }
+            
+            const modalHTML = `
+                <div id="courseInfoModal" class="course-info-overlay" onclick="closeCourseInfoModal(event)">
+                    <div class="course-info-modal admin-modal" onclick="event.stopPropagation()">
+                        <div class="course-info-header admin-header-pink">
+                            <h3>課程資訊</h3>
+                            <button class="close-btn-x" onclick="closeCourseInfoModal()">✕</button>
+                        </div>
+                        <div class="course-info-body">
+                            <div class="info-grid">
+                                <div class="info-cell">
+                                    <span class="info-label">學年期</span>
+                                    <span class="info-value admin-value">${course.semester || ''}</span>
+                                </div>
+                                <div class="info-cell">
+                                    <span class="info-label">課程代碼</span>
+                                    <span class="info-value admin-value">${course.course_code || ''}</span>
+                                </div>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-cell">
+                                    <span class="info-label">課程名稱</span>
+                                    <span class="info-value admin-value">${course.course_name || ''}</span>
+                                </div>
+                                <div class="info-cell">
+                                    <span class="info-label">授課老師</span>
+                                    <span class="info-value admin-value">${course.instructor || ''}</span>
+                                </div>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-cell">
+                                    <span class="info-label">學分數</span>
+                                    <span class="info-value admin-value">${course.credits || ''}</span>
+                                </div>
+                                <div class="info-cell">
+                                    <span class="info-label">課別名稱</span>
+                                    <span class="info-value admin-value">${course.course_type || ''}</span>
+                                </div>
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-cell">
+                                    <span class="info-label">上課人數</span>
+                                    <span class="info-value admin-value">${course.capacity !== null && course.capacity !== undefined ? course.capacity : ''}</span>
+                                </div>
+                                <div class="info-cell">
+                                    <span class="info-label">班組名稱</span>
+                                    <span class="info-value admin-value">${course.class_group || ''}</span>
+                                </div>
+                            </div>
+                            <div class="info-grid single">
+                                <div class="info-cell full">
+                                    <span class="info-label">時間及教室</span>
+                                    <span class="info-value admin-value">${timeDisplay || '無'}</span>
+                                </div>
+                            </div>
+                            <div class="info-remarks">
+                                <span class="info-label">課程備註</span>
+                                <div class="remarks-text admin-remarks">${course.remarks || '無'}</div>
+                            </div>
+                        </div>
+                        <div class="course-info-footer">
+                            <button class="btn-close-pink" onclick="closeCourseInfoModal()">關閉</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 移除舊的Modal
+            const oldModal = document.getElementById('courseInfoModal');
+            if (oldModal) oldModal.remove();
+            
+            // 添加新Modal
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+    } catch (error) {
+        console.error('❌ 載入課程資訊失敗:', error);
+        alert('載入課程資訊失敗');
+    }
+}
+
+// 關閉課程資訊Modal
+function closeCourseInfoModal(event) {
+    if (event && event.target.id !== 'courseInfoModal') return;
+    const modal = document.getElementById('courseInfoModal');
+    if (modal) modal.remove();
+}
+
+// ========================================
+// 功能：清除搜尋
+// ========================================
+function adminClearSearch() {
+    document.getElementById('adminKeywordInput').value = '';
+    document.getElementById('adminSemesterSelect').value = '';
+    document.getElementById('adminDepartmentSelect').value = '';
+    document.getElementById('adminGradeSelect').value = '';
+    document.getElementById('adminTypeSelect').value = '';
+    document.getElementById('adminCoursesResults').innerHTML = 
+        '<p class="no-results">請輸入搜尋條件查詢課程</p>';
+    console.log('🧹 清除搜尋條件');
+}
+
+// ========================================
+// 功能：開啟新增課程Modal
+// ========================================
+function openAddCourseModal() {
+    editingCourseId = null;
+    document.getElementById('courseModalTitle').textContent = '新增課程';
+    document.getElementById('courseForm').reset();
+    document.getElementById('courseId').value = '';
+    document.getElementById('courseModal').classList.add('active');
+    console.log('➕ 開啟新增課程視窗');
+}
+
+// ========================================
+// 功能：關閉課程Modal
+// ========================================
+function closeCourseModal() {
+    document.getElementById('courseModal').classList.remove('active');
+    document.getElementById('courseForm').reset();
+    editingCourseId = null;
+    console.log('✖ 關閉課程視窗');
+}
+
+// ========================================
+// 功能：編輯課程
+// ========================================
+async function editCourse(courseId) {
+    try {
+        const response = await fetch(`/api/courses/${courseId}`);
+        const data = await response.json();
+        
+        if (data.success && data.course) {
+            const course = data.course;
+            editingCourseId = courseId;
+            
+            document.getElementById('courseModalTitle').textContent = '編輯課程';
+            document.getElementById('courseId').value = courseId;
+            document.getElementById('courseSemester').value = course.semester || '';
+            document.getElementById('courseCode').value = course.course_code || '';
+            document.getElementById('courseCredits').value = course.credits || '';
+            document.getElementById('courseName').value = course.course_name || '';
+            document.getElementById('courseInstructor').value = course.instructor || '';
+            document.getElementById('courseDepartment').value = course.department || '';
+            document.getElementById('courseWeekday').value = course.weekday || '';
+            document.getElementById('coursePeriod').value = course.period || '';
+            document.getElementById('courseLocation').value = course.classroom || '';
+            document.getElementById('courseClassGroup').value = course.class_group || '';
+            document.getElementById('courseGrade').value = course.grade || '';
+            document.getElementById('courseCapacity').value = course.capacity || 60;
+            document.getElementById('courseRemarks').value = course.remarks || '';
+            
+            document.getElementById('courseModal').classList.add('active');
+            console.log('✏️ 載入課程資料:', courseId);
+        } else {
+            alert('載入課程資料失敗');
+        }
+    } catch (error) {
+        console.error('❌ 載入課程失敗:', error);
+        alert('載入課程資料失敗');
+    }
+}
+
+// ========================================
+// 功能：處理課程表單提交
+// ========================================
+async function handleCourseSubmit(e) {
+    e.preventDefault();
+    
+    const courseData = {
+        semester: document.getElementById('courseSemester').value,
+        course_code: document.getElementById('courseCode').value,
+        credits: document.getElementById('courseCredits').value,
+        course_name: document.getElementById('courseName').value,
+        instructor: document.getElementById('courseInstructor').value,
+        department: document.getElementById('courseDepartment').value,
+        weekday: document.getElementById('courseWeekday').value,
+        period: document.getElementById('coursePeriod').value,
+        classroom: document.getElementById('courseLocation').value,
+        class_group: document.getElementById('courseClassGroup').value,
+        grade: document.getElementById('courseGrade').value,
+        capacity: document.getElementById('courseCapacity').value,
+        remarks: document.getElementById('courseRemarks').value
+    };
+    
+    try {
+        const url = editingCourseId 
+            ? `/api/courses/${editingCourseId}` 
+            : '/api/courses';
+        const method = editingCourseId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(courseData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✓ ' + result.message);
+            closeCourseModal();
+            adminSearchCourses(); // 重新搜尋以更新列表
+            console.log('✅ 課程儲存成功');
+        } else {
+            alert('✗ ' + result.message);
+        }
+    } catch (error) {
+        console.error('❌ 儲存課程失敗:', error);
+        alert('操作失敗: ' + error.message);
+    }
+}
+
+// ========================================
+// 功能：刪除課程
+// ========================================
+async function deleteCourse(courseId) {
+    if (!confirm('確定要刪除這門課程嗎？')) return;
+    
+    try {
+        const response = await fetch(`/api/courses/${courseId}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✓ ' + result.message);
+            adminSearchCourses(); // 重新搜尋以更新列表
+            console.log('✅ 課程刪除成功');
+        } else {
+            alert('✗ ' + result.message);
+        }
+    } catch (error) {
+        console.error('❌ 刪除課程失敗:', error);
+        alert('操作失敗，請稍後再試');
+    }
+}
+
+// ========================================
+// 功能：檔案拖放處理
+// ========================================
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropZone').classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropZone').classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropZone').classList.remove('drag-over');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFileUpload(files[0]);
+    }
+}
+
+function handleFileSelect(e) {
+    const files = e.target.files;
+    if (files.length > 0) {
+        handleFileUpload(files[0]);
+    }
+}
+
+// ========================================
+// 功能：檔案上傳處理
+// ========================================
+async function handleFileUpload(file) {
+    const statusDiv = document.getElementById('uploadStatus');
+    
+    // 檢查檔案類型
+    const validTypes = ['.csv', '.xlsx', '.xls'];
+    const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    
+    if (!validTypes.includes(fileExt)) {
+        statusDiv.className = 'upload-status error';
+        statusDiv.textContent = '✗ 檔案格式錯誤！請上傳 CSV 或 Excel 檔案';
+        return;
+    }
+    
+    // 檢查檔案大小 (300MB)
+    if (file.size > 300 * 1024 * 1024) {
+        statusDiv.className = 'upload-status error';
+        statusDiv.textContent = '✗ 檔案太大！請上傳小於 300 MB 的檔案';
+        return;
+    }
+    
+    // 顯示上傳中
+    statusDiv.className = 'upload-status';
+    statusDiv.textContent = '⏳ 正在上傳檔案...';
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch('/api/import-courses', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            statusDiv.className = 'upload-status success';
+            statusDiv.textContent = `✓ 成功匯入 ${result.count || 0} 筆課程資料！`;
+            console.log('✅ 檔案上傳成功');
+        } else {
+            statusDiv.className = 'upload-status error';
+            statusDiv.textContent = '✗ ' + result.message;
+        }
+    } catch (error) {
+        console.error('❌ 上傳失敗:', error);
+        statusDiv.className = 'upload-status error';
+        statusDiv.textContent = '✗ 上傳失敗，請稍後再試';
+    }
+}
+
+// ========================================
+// 功能：載入帳號列表
+// ========================================
+async function loadAccounts() {
+    try {
+        const response = await fetch('/api/users');
+        const data = await response.json();
+        
+        if (data.success && data.users) {
+            displayAccounts(data.users);
+            console.log(`✅ 載入 ${data.users.length} 個帳號`);
+        }
+    } catch (error) {
+        console.error('❌ 載入帳號失敗:', error);
+    }
+}
+
+// ========================================
+// 功能：顯示帳號卡片
+// ========================================
+function displayAccounts(users) {
+    const container = document.getElementById('accountsGrid');
+    
+    if (!users || users.length === 0) {
+        container.innerHTML = '<p class="no-results">尚無帳號資料</p>';
+        return;
+    }
+    
+    // 卡通人物頭像列表
+    const avatars = [
+        'https://i.imgur.com/5qZnLQ3.png', // 章魚哥
+        'https://i.imgur.com/2k8H9X1.png', // 蝸牛
+        'https://i.imgur.com/1mZ3K9x.png', // 派大星
+        'https://i.imgur.com/9xK2L1m.png', // 海綿寶寶
+        'https://i.imgur.com/7xM2N3p.png', // 蟹老闆
+        'https://i.imgur.com/4xL3K2n.png'  // 皮老闆
+    ];
+    
+    let html = '';
+    users.forEach((user, index) => {
+        const avatar = avatars[index % avatars.length];
+        html += `
+            <div class="account-card">
+                <button class="delete-account-btn" onclick="deleteAccount('${user.username}')" title="刪除帳號">✖</button>
+                <img src="${avatar}" alt="${user.name}" class="account-avatar" onerror="this.src='https://via.placeholder.com/100'">
+                <div class="account-name">${user.name || user.username}</div>
+                <div class="account-id">ID : ${user.username}</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// ========================================
+// 功能：開啟新增帳號Modal
+// ========================================
+function openAddAccountModal() {
+    document.getElementById('accountForm').reset();
+    document.getElementById('accountModal').classList.add('active');
+    console.log('➕ 開啟新增帳號視窗');
+}
+
+// ========================================
+// 功能：關閉帳號Modal
+// ========================================
+function closeAccountModal() {
+    document.getElementById('accountModal').classList.remove('active');
+    document.getElementById('accountForm').reset();
+    console.log('✖ 關閉帳號視窗');
+}
+
+// ========================================
+// 功能：處理帳號表單提交
+// ========================================
+async function handleAccountSubmit(e) {
+    e.preventDefault();
+    
+    const accountData = {
+        username: document.getElementById('accountUsername').value,
+        password: document.getElementById('accountPassword').value,
+        name: document.getElementById('accountName').value,
+        role: document.getElementById('accountRole').value
+    };
+    
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(accountData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✓ ' + result.message);
+            closeAccountModal();
+            loadAccounts(); // 重新載入帳號列表
+            console.log('✅ 帳號新增成功');
+        } else {
+            alert('✗ ' + result.message);
+        }
+    } catch (error) {
+        console.error('❌ 新增帳號失敗:', error);
+        alert('操作失敗，請稍後再試');
+    }
+}
+
+// ========================================
+// 功能：刪除帳號
+// ========================================
+async function deleteAccount(username) {
+    if (!confirm(`確定要刪除帳號 ${username} 嗎？`)) return;
+    
+    try {
+        const response = await fetch(`/api/users/${username}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✓ ' + result.message);
+            loadAccounts(); // 重新載入帳號列表
+            console.log('✅ 帳號刪除成功');
+        } else {
+            alert('✗ ' + result.message);
+        }
+    } catch (error) {
+        console.error('❌ 刪除帳號失敗:', error);
+        alert('操作失敗，請稍後再試');
+    }
+}
+
+// ========================================
+// 功能：登出
+// ========================================
+async function logout() {
+    if (!confirm('確定要登出嗎？')) return;
+    
+    try {
+        await fetch('/api/logout', {method: 'POST'});
+        localStorage.removeItem('currentUser');
+        console.log('✅ 登出成功');
+        window.location.href = '/';
+    } catch (error) {
+        console.error('❌ 登出失敗:', error);
+        window.location.href = '/';
+    }
+}
+
+// ========================================
+// Enter鍵快速搜尋
+// ========================================
+document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const activeElement = document.activeElement;
+        if (activeElement.id === 'adminKeywordInput') {
+            adminSearchCourses();
+        }
+    }
+});
+
+// ========================================
+// Modal背景點擊關閉
+// ========================================
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal')) {
+        if (e.target.id === 'courseModal') closeCourseModal();
+        if (e.target.id === 'accountModal') closeAccountModal();
+    }
+});
+
+// ========================================
+// 篩選面板功能
+// ========================================
+
+// 切換篩選面板
+function toggleFilterPanel(type) {
+    const container = document.getElementById('adminFilterPanelContainer');
+    
+    if (adminCurrentFilterPanel === type) {
+        container.innerHTML = '';
+        adminCurrentFilterPanel = null;
+        return;
+    }
+    
+    adminCurrentFilterPanel = type;
+    let panelHTML = '';
+    
+    switch(type) {
+        case 'weekday':
+            panelHTML = createAdminWeekdayPanel();
+            break;
+        case 'period':
+            panelHTML = createAdminPeriodPanel();
+            break;
+        case 'degree':
+            panelHTML = createAdminDegreePanel();
+            break;
+        case 'category':
+            panelHTML = createAdminCategoryPanel();
+            break;
+        case 'dept':
+            container.innerHTML = '';
+            adminCurrentFilterPanel = null;
+            return;
+    }
+    
+    container.innerHTML = panelHTML;
+    restoreAdminFilterSelections(type);
+}
+
+// 建立星期篩選面板
+function createAdminWeekdayPanel() {
+    const weekdays = [
+        { value: '1', label: '週一' },
+        { value: '2', label: '週二' },
+        { value: '3', label: '週三' },
+        { value: '4', label: '週四' },
+        { value: '5', label: '週五' },
+        { value: '6', label: '週六' },
+        { value: '7', label: '週日' }
+    ];
+    
+    return `
+        <div class="filter-panel">
+            <div class="filter-panel-title">星期：</div>
+            <div class="filter-panel-content">
+                ${weekdays.map(day => `
+                    <div class="filter-checkbox-group">
+                        <input type="checkbox" id="admin_weekday_${day.value}" value="${day.value}" 
+                               onchange="updateAdminFilter('weekday', '${day.value}', this.checked)">
+                        <label for="admin_weekday_${day.value}">${day.label}</label>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// 建立節次篩選面板
+function createAdminPeriodPanel() {
+    const periods = [
+        { value: '1', label: '第1節 (08:10~09:00)' },
+        { value: '2', label: '第2節 (09:10~10:00)' },
+        { value: '3', label: '第3節 (10:10~11:00)' },
+        { value: '4', label: '第4節 (11:10~12:00)' },
+        { value: '5', label: '第5節 (12:40~13:30)' },
+        { value: '6', label: '第6節 (13:40~14:30)' },
+        { value: '7', label: '第7節 (14:40~15:30)' },
+        { value: '8', label: '第8節 (15:40~16:30)' },
+        { value: '9', label: '第9節 (16:40~17:30)' },
+        { value: '10', label: '第10節 (17:40~18:30)' },
+        { value: '11', label: '第11節 (18:35~19:25)' },
+        { value: '12', label: '第12節 (19:30~20:20)' },
+        { value: '13', label: '第13節 (20:25~21:15)' },
+        { value: '14', label: '第14節 (21:20~22:10)' }
+    ];
+    
+    return `
+        <div class="filter-panel">
+            <div class="filter-panel-title">節次：</div>
+            <div class="filter-panel-content">
+                ${periods.map(p => `
+                    <div class="filter-checkbox-group">
+                        <input type="checkbox" id="admin_period_${p.value}" value="${p.value}" 
+                               onchange="updateAdminFilter('period', '${p.value}', this.checked)">
+                        <label for="admin_period_${p.value}">${p.label}</label>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// 建立學制篩選面板
+function createAdminDegreePanel() {
+    const degrees = [
+        { value: '四技', label: '四技' },
+        { value: '二技', label: '二技' },
+        { value: '二技(三年)', label: '二技(三年)' },
+        { value: '碩士班', label: '碩士班' },
+        { value: '博士班', label: '博士班' },
+        { value: '學士後系', label: '學士後系' },
+        { value: '學士後多元專長', label: '學士後多元專長' },
+        { value: '學士後學位學程', label: '學士後學位學程' }
+    ];
+    
+    return `
+        <div class="filter-panel">
+            <div class="filter-panel-title">學制：</div>
+            <div class="filter-panel-content">
+                ${degrees.map(d => `
+                    <div class="filter-checkbox-group">
+                        <input type="checkbox" id="admin_degree_${d.value}" value="${d.value}" 
+                               onchange="updateAdminFilter('degree', '${d.value}', this.checked)">
+                        <label for="admin_degree_${d.value}">${d.label}</label>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// 建立課程內容分類篩選面板
+function createAdminCategoryPanel() {
+    const categories = [
+        { value: '跨校', label: '跨校' },
+        { value: '跨域課程', label: '跨域課程' },
+        { value: '全英語授課', label: '全英語授課' },
+        { value: 'EMI全英語授課', label: 'EMI全英語授課' },
+        { value: '同步遠距教學', label: '同步遠距教學' },
+        { value: '非同步遠距教學', label: '非同步遠距教學' },
+        { value: '混合式遠距教學', label: '混合式遠距教學' },
+        { value: '遠距教學課程', label: '遠距教學課程' },
+        { value: '遠距輔助課程', label: '遠距輔助課程' }
+    ];
+    
+    return `
+        <div class="filter-panel">
+            <div class="filter-panel-title">課程內容分類：</div>
+            <div class="filter-panel-content">
+                ${categories.map(c => `
+                    <div class="filter-checkbox-group">
+                        <input type="checkbox" id="admin_category_${c.value.replace(/\s/g, '_')}" value="${c.value}" 
+                               onchange="updateAdminFilter('category', '${c.value}', this.checked)">
+                        <label for="admin_category_${c.value.replace(/\s/g, '_')}">${c.label}</label>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// 更新篩選條件
+function updateAdminFilter(type, value, checked) {
+    if (checked) {
+        if (!adminSelectedFilters[type].includes(value)) {
+            adminSelectedFilters[type].push(value);
+        }
+    } else {
+        adminSelectedFilters[type] = adminSelectedFilters[type].filter(v => v !== value);
+    }
+    console.log('管理員篩選條件已更新:', adminSelectedFilters);
+}
+
+// 恢復篩選選擇狀態
+function restoreAdminFilterSelections(type) {
+    if (adminSelectedFilters[type] && adminSelectedFilters[type].length > 0) {
+        adminSelectedFilters[type].forEach(value => {
+            const safeValue = value.replace(/\s/g, '_');
+            const checkbox = document.getElementById(`admin_${type}_${value}`) || 
+                           document.getElementById(`admin_${type}_${safeValue}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
+}
+
+console.log('✅ 管理員篩選面板功能已載入');
+console.log('🎉 admin.js 載入完成');

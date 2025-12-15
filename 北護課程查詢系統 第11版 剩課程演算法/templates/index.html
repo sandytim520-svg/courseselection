@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北護課程查詢系統 - 登入</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <!-- ========================================
+         主容器
+         ======================================== -->
+    <div class="container">
+        
+        <!-- ========================================
+             左側：學校資訊區
+             ======================================== -->
+        <div class="left-section">
+            <div class="school-info">
+                <!-- Logo區 -->
+                <div class="logo-container">
+                    <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 北護Logo：綠十字 + 金色外框 -->
+                        <circle cx="50" cy="50" r="45" fill="#2D5A3D" stroke="#FFD700" stroke-width="3"/>
+                        <rect x="42" y="20" width="16" height="60" fill="white" rx="2"/>
+                        <rect x="20" y="42" width="60" height="16" fill="white" rx="2"/>
+                        <!-- 月桂葉裝飾 -->
+                        <path d="M15,50 Q15,30 25,25 L20,50 Z" fill="#FFD700"/>
+                        <path d="M85,50 Q85,30 75,25 L80,50 Z" fill="#FFD700"/>
+                    </svg>
+                    <h1>國立臺北護理健康大學</h1>
+                    <p class="english">National Taipei University of Nursing and Health Sciences</p>
+                </div>
+                
+                <!-- 連結區 -->
+                <div class="links">
+                    <a href="/guest" class="admin-link guest-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="10" cy="7" r="4"/>
+                            <path d="M3 19c0-3.3 2.7-6 6-6h2c3.3 0 6 2.7 6 6"/>
+                        </svg>
+                        訪客模式
+                    </a>
+                    <a href="https://www.ntunhs.edu.tw" target="_blank" class="back-link">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                        返回首頁
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ========================================
+             右側：登入表單區
+             ======================================== -->
+        <div class="right-section">
+            <div class="login-box">
+                <h2>Student Login</h2>
+                
+                <!-- 登入表單 -->
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <!-- 帳號輸入 -->
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="username" 
+                            placeholder="Username"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+                    
+                    <!-- 密碼輸入 -->
+                    <div class="input-group">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            placeholder="Password"
+                            required
+                            autocomplete="current-password"
+                        >
+                        <!-- 顯示/隱藏密碼按鈕 -->
+                        <button type="button" class="toggle-password" onclick="togglePassword()" tabindex="-1">
+                            <svg id="eyeIcon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                                <line id="eyeSlash" x1="1" y1="1" x2="23" y2="23" stroke-width="2" style="display: none;"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- 忘記密碼 -->
+                    <a href="#" class="forgot-password">忘記密碼?</a>
+                    
+                    <!-- 登入按鈕 -->
+                    <button type="submit" class="login-btn">登入</button>
+                    
+                    <!-- 訊息提示區 -->
+                    <div id="loginMessage" class="message"></div>
+                </form>
+                
+                <!-- 測試帳號提示 -->
+                <div class="test-hint">
+                    <p>
+                        💡 測試帳號<br>
+                        學生：student1 / pass123<br>
+                        管理員：admin / admin123
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         JavaScript：登入功能
+         ======================================== -->
+    <script>
+        // 切換密碼顯示/隱藏
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeSlash = document.getElementById('eyeSlash');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeSlash.style.display = 'block';
+            } else {
+                passwordInput.type = 'password';
+                eyeSlash.style.display = 'none';
+            }
+        }
+        
+        // 處理登入
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const messageElement = document.getElementById('loginMessage');
+            const loginBtn = document.querySelector('.login-btn');
+            
+            // 驗證輸入
+            if (!username || !password) {
+                messageElement.textContent = '請輸入帳號和密碼';
+                messageElement.className = 'message error';
+                return;
+            }
+            
+            // 顯示載入中
+            loginBtn.textContent = '登入中...';
+            loginBtn.disabled = true;
+            messageElement.textContent = '';
+            
+            try {
+                // 發送登入請求
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 登入成功
+                    messageElement.textContent = '✓ 登入成功！跳轉中...';
+                    messageElement.className = 'message success';
+                    
+                    // 儲存使用者資訊到localStorage
+                    localStorage.setItem('currentUser', JSON.stringify(result));
+                    
+                    // 根據角色跳轉
+                    setTimeout(() => {
+                        if (result.role === 'student') {
+                            window.location.href = '/student';
+                        } else if (result.role === 'admin') {
+                            window.location.href = '/admin';
+                        }
+                    }, 800);
+                } else {
+                    // 登入失敗
+                    messageElement.textContent = '✗ ' + (result.message || '帳號或密碼錯誤');
+                    messageElement.className = 'message error';
+                    loginBtn.textContent = '登入';
+                    loginBtn.disabled = false;
+                }
+            } catch (error) {
+                // 網路錯誤
+                messageElement.textContent = '✗ 登入失敗，請檢查網路連線';
+                messageElement.className = 'message error';
+                loginBtn.textContent = '登入';
+                loginBtn.disabled = false;
+                console.error('登入錯誤:', error);
+            }
+        }
+        
+        // Enter鍵快速登入
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const form = document.getElementById('loginForm');
+                if (form) form.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

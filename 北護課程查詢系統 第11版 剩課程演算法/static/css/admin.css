@@ -1,0 +1,1226 @@
+/* ==========================================================
+   北護課程查詢系統 - 管理者頁面樣式
+   根據Figma設計製作 (粉橘色系)
+   ========================================================== */
+
+/* ========================================
+   全域樣式重置
+   ======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft JhengHei', 'Noto Sans TC', 'Arial', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #F5F5F5;
+}
+
+/* ========================================
+   左側導航選單 (粉橘色系)
+   ======================================== */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #E8C4B8 0%, #D8B4A8 100%);
+    color: #5A4A42;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 100;
+}
+
+/* 系統標題 */
+.sidebar-header {
+    padding: 30px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(90, 74, 66, 0.1);
+}
+
+.sidebar-header h3 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    color: #5A4A42;
+}
+
+.sidebar-header p {
+    font-size: 13px;
+    opacity: 0.9;
+    letter-spacing: 1px;
+    color: #6A5A52;
+}
+
+/* 導航選單 */
+.nav-menu {
+    list-style: none;
+    padding: 20px 0;
+    flex: 1;
+}
+
+.nav-item {
+    margin: 8px 15px;
+}
+
+.nav-item a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    color: #5A4A42;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.nav-item a:hover {
+    background: rgba(184, 206, 225, 0.2);
+    transform: translateX(5px);
+}
+
+.nav-item.active a {
+    background: rgba(184, 206, 225, 0.4);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    color: #2D5A3D;
+}
+
+.nav-item svg {
+    flex-shrink: 0;
+}
+
+/* 側邊欄底部 */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(90, 74, 66, 0.1);
+}
+
+/* 登出按鈕 */
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(90, 74, 66, 0.1);
+    color: #5A4A42;
+    border: 1px solid rgba(90, 74, 66, 0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 107, 107, 0.2);
+    border-color: rgba(255, 107, 107, 0.4);
+}
+
+/* 吉祥物 */
+.mascot {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.mascot-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+.mascot p {
+    font-size: 13px;
+    opacity: 0.9;
+    color: #6A5A52;
+}
+
+/* ========================================
+   主要內容區
+   ======================================== */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ========================================
+   頂部Header
+   ======================================== */
+.top-header {
+    background: linear-gradient(135deg, #C8D5C3 0%, #B8CEE1 100%);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.school-logo {
+    width: 50px;
+    height: 50px;
+}
+
+.header-left h2 {
+    font-size: 18px;
+    color: #2D5A3D;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.header-left p {
+    font-size: 11px;
+    color: #5A6C57;
+}
+
+.header-right {
+    display: flex;
+    gap: 20px;
+}
+
+.header-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    color: #5A6C57;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.header-link:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+/* ========================================
+   內容區域
+   ======================================== */
+.content-section {
+    display: none;
+    padding: 30px 40px;
+    overflow-y: auto;
+    height: calc(100vh - 90px);
+}
+
+.content-section.active {
+    display: block;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.section-title {
+    font-size: 28px;
+    color: #2D5A3D;
+    font-weight: 600;
+}
+
+.btn-add {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #FFB6C1 0%, #FFD4D4 100%);
+    color: #8B4513;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 182, 193, 0.4);
+}
+
+/* ========================================
+   搜尋區域
+   ======================================== */
+.search-container {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+}
+
+/* 搜尋列 */
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.search-row label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+.form-select {
+    padding: 12px 15px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #E8C4B8;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #E8C4B8;
+}
+
+/* 篩選按鈕 */
+.filter-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 10px 18px;
+    background: #F8E8E0;
+    border: 1px solid #E8C4B8;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #8B4513;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.filter-btn:hover {
+    background: #F0D8D0;
+    border-color: #D8B4A8;
+}
+
+/* 篩選條件列 */
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-row label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+/* 搜尋按鈕區 */
+.search-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn-search,
+.btn-clear {
+    padding: 12px 40px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-search {
+    background: linear-gradient(135deg, #C8D5C3 0%, #B8CEE1 100%);
+    color: #2D5A3D;
+}
+
+.btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(200, 213, 195, 0.4);
+}
+
+.btn-clear {
+    background: #F0F0F0;
+    color: #666;
+}
+
+.btn-clear:hover {
+    background: #E0E0E0;
+}
+
+/* ========================================
+   結果區域
+   ======================================== */
+.results-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 16px;
+}
+
+/* 結果表格 */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    table-layout: fixed;
+}
+
+/* 表格欄位寬度設定 - 共13欄 */
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) { width: 5%; }   /* 學期 */
+.results-table th:nth-child(2),
+.results-table td:nth-child(2) { width: 10%; }  /* 系所 */
+.results-table th:nth-child(3),
+.results-table td:nth-child(3) { width: 4%; }   /* 年級 */
+.results-table th:nth-child(4),
+.results-table td:nth-child(4) { width: 12%; }  /* 課程名稱 */
+.results-table th:nth-child(5),
+.results-table td:nth-child(5) { width: 8%; }   /* 授課教師 */
+.results-table th:nth-child(6),
+.results-table td:nth-child(6) { width: 4%; }   /* 學分 */
+.results-table th:nth-child(7),
+.results-table td:nth-child(7) { width: 10%; }  /* 課別 */
+.results-table th:nth-child(8),
+.results-table td:nth-child(8) { width: 6%; }   /* 教室 */
+.results-table th:nth-child(9),
+.results-table td:nth-child(9) { width: 5%; }   /* 星期 */
+.results-table th:nth-child(10),
+.results-table td:nth-child(10) { width: 8%; }  /* 節次 */
+.results-table th:nth-child(11),
+.results-table td:nth-child(11) { width: 6%; }  /* 大綱 */
+.results-table th:nth-child(12),
+.results-table td:nth-child(12) { width: 6%; }  /* 編輯 */
+.results-table th:nth-child(13),
+.results-table td:nth-child(13) { width: 6%; }  /* 刪除 */
+
+.results-table thead {
+    background: #F5E6D3;
+}
+
+.results-table th {
+    padding: 15px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #E0E0E0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.results-table td {
+    padding: 15px 8px;
+    border-bottom: 1px solid #F0F0F0;
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.results-table tbody tr:hover {
+    background: #FFF8F0;
+}
+
+/* 操作按鈕 */
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px 8px;
+    transition: transform 0.2s;
+}
+
+.btn-icon:hover {
+    transform: scale(1.2);
+}
+
+/* ========================================
+   匯入課程區域
+   ======================================== */
+.import-container {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.import-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.btn-browse {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #B8CEE1 0%, #C8D5C3 100%);
+    color: #2D5A3D;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-browse:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(184, 206, 225, 0.4);
+}
+
+.import-hint {
+    font-size: 14px;
+    color: #666;
+}
+
+.drop-zone {
+    border: 3px dashed #D8B4A8;
+    border-radius: 15px;
+    padding: 80px 40px;
+    text-align: center;
+    background: #FFF8F0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+    border-color: #E8C4B8;
+    background: #FFF0E0;
+}
+
+.drop-zone svg {
+    display: block;
+    margin: 0 auto 20px;
+}
+
+.drop-zone p {
+    font-size: 18px;
+    color: #999;
+    font-weight: 500;
+}
+
+.upload-status {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.upload-status.success {
+    background: #D4EDDA;
+    color: #155724;
+    border: 1px solid #C3E6CB;
+}
+
+.upload-status.error {
+    background: #F8D7DA;
+    color: #721C24;
+    border: 1px solid #F5C6CB;
+}
+
+/* ========================================
+   帳號管理 - 卡片式顯示
+   ======================================== */
+.accounts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 20px 0;
+}
+
+.account-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.account-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.delete-account-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.delete-account-btn:hover {
+    background: rgba(255, 107, 107, 0.2);
+    transform: scale(1.1);
+}
+
+.account-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    object-fit: cover;
+    border: 3px solid #E8C4B8;
+}
+
+.account-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.account-id {
+    font-size: 14px;
+    color: #666;
+}
+
+/* ========================================
+   Modal (彈窗)
+   ======================================== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 30px;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.modal-header h3 {
+    font-size: 22px;
+    color: #2D5A3D;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    color: #666;
+    transform: scale(1.2);
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+/* ========================================
+   表單樣式
+   ======================================== */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #E8C4B8;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.btn-cancel,
+.btn-submit {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-cancel {
+    background: #F0F0F0;
+    color: #666;
+}
+
+.btn-cancel:hover {
+    background: #E0E0E0;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #C8D5C3 0%, #B8CEE1 100%);
+    color: #2D5A3D;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(200, 213, 195, 0.4);
+}
+
+/* ========================================
+   響應式設計
+   ======================================== */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+    
+    .top-header {
+        padding: 15px 25px;
+    }
+    
+    .content-section {
+        padding: 20px 25px;
+    }
+    
+    .accounts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+    
+    .nav-menu {
+        display: flex;
+        padding: 10px;
+        overflow-x: auto;
+    }
+    
+    .nav-item {
+        margin: 0 5px;
+    }
+    
+    .nav-item a span {
+        display: none;
+    }
+    
+    .sidebar-footer {
+        display: none;
+    }
+    
+    .top-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .search-row,
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .accounts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+}
+
+/* ========================================
+   滾動條美化
+   ======================================== */
+.content-section::-webkit-scrollbar {
+    width: 8px;
+}
+
+.content-section::-webkit-scrollbar-track {
+    background: #F5F5F5;
+}
+
+.content-section::-webkit-scrollbar-thumb {
+    background: #D8B4A8;
+    border-radius: 4px;
+}
+
+.content-section::-webkit-scrollbar-thumb:hover {
+    background: #C8A498;
+}
+/* ========================================
+   課程資訊 Modal 樣式
+   ======================================== */
+.course-info-modal {
+    max-width: 550px;
+}
+
+.course-info-body {
+    padding: 20px;
+}
+
+.info-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.info-row.single {
+    display: block;
+}
+
+.info-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-item.full {
+    width: 100%;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.info-value {
+    background: #f5f5f5;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+.info-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.info-section .info-label {
+    margin-bottom: 8px;
+}
+
+.info-text {
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* 表格按鈕樣式 */
+.btn-outline {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+.btn-outline:hover {
+    background: #f5f5f5;
+}
+
+/* Textarea 樣式 */
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+/* ========================================
+   篩選面板樣式 (橫向排列) - 管理員版
+   ======================================== */
+.filter-panel {
+    background: #FFF8F0;
+    border: 1px solid #E8C4B8;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.filter-panel-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #5A4A42;
+    margin-bottom: 15px;
+}
+
+.filter-panel-content {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.filter-checkbox-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #E8C4B8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-checkbox-group:hover {
+    background: #FFF0E0;
+    border-color: #D8B4A8;
+}
+
+.filter-checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #D8B4A8;
+    cursor: pointer;
+    margin: 0;
+}
+
+.filter-checkbox-group label {
+    font-size: 13px;
+    color: #5A4A42;
+    cursor: pointer;
+    white-space: nowrap;
+    margin: 0;
+}
+
+/* ========================================
+   課程資訊 Modal 樣式 (管理者版)
+   ======================================== */
+.course-info-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.course-info-modal {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 580px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    border: 2px solid #5A6C57;
+}
+
+.course-info-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.course-info-header.admin-header {
+    background: #5A6C57;
+}
+
+.course-info-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+}
+
+.close-btn-x {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.course-info-body {
+    padding: 20px;
+}
+
+.info-grid {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.info-grid.single {
+    display: block;
+}
+
+.info-cell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-cell.full {
+    width: 100%;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.info-value {
+    background: #E8F5E9;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #C8E6C9;
+}
+
+.info-remarks {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.info-remarks .info-label {
+    margin-bottom: 8px;
+    display: block;
+}
+
+.remarks-text {
+    background: #E8F5E9;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid #C8E6C9;
+}
+
+.course-info-footer {
+    padding: 15px 20px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.btn-close-green {
+    background: #5A6C57;
+    color: white;
+    border: none;
+    padding: 10px 40px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-close-green:hover {
+    background: #4a5c47;
+}
+
+/* 管理者表格按鈕樣式 */
+.btn-edit {
+    color: #D8B4A8;
+    font-size: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-edit:hover {
+    color: #c89a8a;
+}
+
+.btn-trash {
+    color: #D8B4A8;
+    font-size: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-trash:hover {
+    color: #c89a8a;
+}
+
+/* ========================================
+   管理者大綱 Modal 粉紅色主題
+   ======================================== */
+.admin-header-pink {
+    background: #D8B4A8 !important;
+}
+
+.admin-header-pink h3 {
+    color: #333 !important;
+}
+
+.admin-header-pink .close-btn-x {
+    color: #333 !important;
+}
+
+.info-value.admin-value {
+    background: #FFF8F0;
+    border: 1px solid #E8C4B8;
+}
+
+.remarks-text.admin-remarks {
+    background: #FFF8F0;
+    border: 1px solid #E8C4B8;
+}
+
+.btn-close-pink {
+    background: #D8B4A8;
+    color: #333;
+    border: none;
+    padding: 10px 40px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-close-pink:hover {
+    background: #c89a8a;
+}

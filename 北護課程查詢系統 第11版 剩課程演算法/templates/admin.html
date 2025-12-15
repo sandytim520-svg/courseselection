@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北護課程查詢系統 - 管理者</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <!-- ========================================
+         左側導航選單
+         ======================================== -->
+    <nav class="sidebar">
+        <!-- 系統標題 -->
+        <div class="sidebar-header">
+            <h3>NTUNHS</h3>
+            <p>課程查詢系統</p>
+        </div>
+        
+        <!-- 導航選單 -->
+        <ul class="nav-menu">
+            <li class="nav-item active">
+                <a href="#" onclick="showSection('courses'); return false;">
+                    <svg width="24" height="24" fill="currentColor">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    <span>課程管理</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="#" onclick="showSection('import'); return false;">
+                    <svg width="24" height="24" fill="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
+                    <span>匯入課程</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a href="#" onclick="showSection('accounts'); return false;">
+                    <svg width="24" height="24" fill="currentColor">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span>帳號管理</span>
+                </a>
+            </li>
+        </ul>
+        
+        <!-- 底部：登出+吉祥物 -->
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="logout()">
+                <svg width="20" height="20" fill="currentColor">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>登出</span>
+            </button>
+            
+            <div class="mascot">
+                <div class="mascot-icon">🧑‍💼</div>
+                <p>管鯉圖</p>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- ========================================
+         主要內容區
+         ======================================== -->
+    <main class="main-content">
+        <!-- ========================================
+             頂部Header
+             ======================================== -->
+        <header class="top-header">
+            <div class="header-left">
+                <svg class="school-logo" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="#2D5A3D" stroke="#FFD700" stroke-width="3"/>
+                    <rect x="42" y="20" width="16" height="60" fill="white" rx="2"/>
+                    <rect x="20" y="42" width="60" height="16" fill="white" rx="2"/>
+                </svg>
+                <div>
+                    <h2>國立臺北護理健康大學</h2>
+                    <p>National Taipei University of Nursing and Health Sciences</p>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <a href="https://www.ntunhs.edu.tw" target="_blank" class="header-link">
+                    <svg width="20" height="20" fill="currentColor">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    </svg>
+                    學校首頁
+                </a>
+                <a href="https://system8.ntunhs.edu.tw/myNTUNHS_student/Modules/Main/Index_student.aspx?first=true" target="_blank" class="header-link">
+                    <svg width="20" height="20" fill="currentColor">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                    e-portfolio 學習歷程
+                </a>
+            </div>
+        </header>
+        
+        <!-- ========================================
+             Section 1: 課程管理
+             ======================================== -->
+        <section id="coursesSection" class="content-section active">
+            <div class="section-header">
+                <h2 class="section-title">📚 課程管理</h2>
+                <button class="btn-add" onclick="openAddCourseModal()">
+                    ➕ 新增課程請點我
+                </button>
+            </div>
+            
+            <!-- 搜尋區 -->
+            <div class="search-container">
+                <div class="search-row">
+                    <label>*學期：</label>
+                    <select id="adminSemesterSelect" class="form-select">
+                        <option value="">請選擇學期</option>
+                        <option value="1142">1142</option>
+                        <option value="1141">1141</option>
+                        <option value="1132">1132</option>
+                        <option value="1131">1131</option>
+                    </select>
+                    
+                    <input 
+                        type="text" 
+                        id="adminKeywordInput" 
+                        class="search-input" 
+                        placeholder="🔍 關鍵字查詢 (請輸入授課教師、課程名稱或教室)"
+                    >
+                </div>
+                
+                <!-- 篩選條件按鈕 -->
+                <div class="filter-buttons">
+                    <button class="filter-btn" onclick="toggleFilterPanel('dept'); return false;">系所/年級/課別 ⌄</button>
+                    <button class="filter-btn" onclick="toggleFilterPanel('weekday'); return false;">星期 ⌄</button>
+                    <button class="filter-btn" onclick="toggleFilterPanel('degree'); return false;">學制 ⌄</button>
+                    <button class="filter-btn" onclick="toggleFilterPanel('period'); return false;">節次 ⌄</button>
+                    <button class="filter-btn" onclick="toggleFilterPanel('category'); return false;">課程內容分類 ⌄</button>
+                </div>
+                
+                <!-- 篩選面板容器 -->
+                <div id="adminFilterPanelContainer"></div>
+                
+                <!-- 篩選選項 -->
+                <div class="filter-row">
+                    <label>系所：</label>
+                    <select id="adminDepartmentSelect" class="form-select">
+                        <option value="">請選擇系所</option>
+                    </select>
+                    
+                    <label>年級：</label>
+                    <select id="adminGradeSelect" class="form-select">
+                        <option value="">請選擇年級</option>
+                        <option value="1">一年級</option>
+                        <option value="2">二年級</option>
+                        <option value="3">三年級</option>
+                        <option value="4">四年級</option>
+                    </select>
+                    
+                    <label>課別：</label>
+                    <select id="adminTypeSelect" class="form-select">
+                        <option value="">請選擇課別</option>
+                        <option value="專業必修(系所)">專業必修(系所)</option>
+                        <option value="專業選修(系所)">專業選修(系所)</option>
+                        <option value="通識必修(通識)">通識必修(通識)</option>
+                        <option value="通識選修(通識)">通識選修(通識)</option>
+                    </select>
+                </div>
+                
+                <!-- 搜尋按鈕 -->
+                <div class="search-actions">
+                    <button class="btn-search" onclick="adminSearchCourses()">
+                        🔍 查詢
+                    </button>
+                    <button class="btn-clear" onclick="adminClearSearch()">
+                        ✖ 清除
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 課程列表 -->
+            <div id="adminCoursesResults" class="results-container">
+                <p class="no-results">請輸入搜尋條件查詢課程</p>
+            </div>
+        </section>
+        
+        <!-- ========================================
+             Section 2: 匯入課程
+             ======================================== -->
+        <section id="importSection" class="content-section">
+            <h2 class="section-title">📥 匯入課程</h2>
+            
+            <div class="import-container">
+                <div class="import-header">
+                    <button class="btn-browse" onclick="document.getElementById('fileInput').click()">
+                        瀏覽
+                    </button>
+                    <p class="import-hint">請將檔案拖曳至此視窗 (單檔限制: 300 MB)</p>
+                </div>
+                
+                <div class="drop-zone" id="dropZone" 
+                     ondrop="handleDrop(event)" 
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)">
+                    <svg width="80" height="80" fill="#CCC">
+                        <path d="M40 10 L40 50 M20 30 L40 50 L60 30"/>
+                        <rect x="10" y="50" width="60" height="4" rx="2"/>
+                    </svg>
+                    <p>Drop files here !</p>
+                </div>
+                
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;" onchange="handleFileSelect(event)">
+                
+                <div id="uploadStatus" class="upload-status"></div>
+            </div>
+        </section>
+        
+        <!-- ========================================
+             Section 3: 帳號管理
+             ======================================== -->
+        <section id="accountsSection" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">👥 帳號管理</h2>
+                <button class="btn-add" onclick="openAddAccountModal()">
+                    ➕ 新增帳號
+                </button>
+            </div>
+            
+            <!-- 帳號卡片列表 -->
+            <div id="accountsGrid" class="accounts-grid">
+                <p class="no-results">載入中...</p>
+            </div>
+        </section>
+    </main>
+    
+    <!-- ========================================
+         Modal: 新增/編輯課程
+         ======================================== -->
+    <div id="courseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="courseModalTitle">新增課程</h3>
+                <button class="close-btn" onclick="closeCourseModal()">✖</button>
+            </div>
+            <div class="modal-body">
+                <form id="courseForm">
+                    <input type="hidden" id="courseId">
+                    
+                    <div class="form-group">
+                        <label>學期 *</label>
+                        <input type="text" id="courseSemester" required placeholder="例：1142">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>課程代碼 *</label>
+                            <input type="text" id="courseCode" required>
+                        </div>
+                        <div class="form-group">
+                            <label>學分 *</label>
+                            <input type="number" id="courseCredits" required min="0" step="0.5">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>課程名稱 *</label>
+                        <input type="text" id="courseName" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>教師 *</label>
+                            <input type="text" id="courseInstructor" required>
+                        </div>
+                        <div class="form-group">
+                            <label>系所 *</label>
+                            <input type="text" id="courseDepartment" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>星期</label>
+                            <select id="courseWeekday">
+                                <option value="">請選擇</option>
+                                <option value="1">週一</option>
+                                <option value="2">週二</option>
+                                <option value="3">週三</option>
+                                <option value="4">週四</option>
+                                <option value="5">週五</option>
+                                <option value="6">週六</option>
+                                <option value="7">週日</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>節次</label>
+                            <input type="text" id="coursePeriod" placeholder="例：2,3,4 或 2-4">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>教室</label>
+                            <input type="text" id="courseLocation" placeholder="例：F601">
+                        </div>
+                        <div class="form-group">
+                            <label>上課班組</label>
+                            <input type="text" id="courseClassGroup" placeholder="例：A0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>年級</label>
+                            <select id="courseGrade">
+                                <option value="">請選擇</option>
+                                <option value="1">一年級</option>
+                                <option value="2">二年級</option>
+                                <option value="3">三年級</option>
+                                <option value="4">四年級</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>容量</label>
+                            <input type="number" id="courseCapacity" min="0" value="60">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>課表備註</label>
+                        <textarea id="courseRemarks" rows="3" placeholder="例：修課限制、跨域課程等"></textarea>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeCourseModal()">取消</button>
+                        <button type="submit" class="btn-submit">儲存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         Modal: 新增帳號
+         ======================================== -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新增帳號</h3>
+                <button class="close-btn" onclick="closeAccountModal()">✖</button>
+            </div>
+            <div class="modal-body">
+                <form id="accountForm">
+                    <div class="form-group">
+                        <label>使用者名稱 *</label>
+                        <input type="text" id="accountUsername" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>密碼 *</label>
+                        <input type="password" id="accountPassword" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>姓名 *</label>
+                        <input type="text" id="accountName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>角色 *</label>
+                        <select id="accountRole" required>
+                            <option value="student">學生</option>
+                            <option value="admin">管理員</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" onclick="closeAccountModal()">取消</button>
+                        <button type="submit" class="btn-submit">新增</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

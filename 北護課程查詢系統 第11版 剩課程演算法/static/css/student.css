@@ -1,0 +1,1370 @@
+/* ==========================================================
+   北護課程查詢系統 - 學生頁面樣式
+   根據Figma設計製作
+   ========================================================== */
+
+/* ========================================
+   全域樣式重置
+   ======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Microsoft JhengHei', 'Noto Sans TC', 'Arial', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #F5F5F5;
+}
+
+/* ========================================
+   左側導航選單
+   ======================================== */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #5A6C57 0%, #4A5C47 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 100;
+}
+
+/* 系統標題 */
+.sidebar-header {
+    padding: 30px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h3 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.sidebar-header p {
+    font-size: 13px;
+    opacity: 0.9;
+    letter-spacing: 1px;
+}
+
+/* 導航選單 */
+.nav-menu {
+    list-style: none;
+    padding: 20px 0;
+    flex: 1;
+}
+
+.nav-item {
+    margin: 8px 15px;
+}
+
+.nav-item a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.nav-item a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.nav-item.active a {
+    background: rgba(184, 206, 225, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.nav-item svg {
+    flex-shrink: 0;
+}
+
+/* 側邊欄底部 */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 登出按鈕 */
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 107, 107, 0.2);
+    border-color: rgba(255, 107, 107, 0.4);
+}
+
+/* 吉祥物 */
+.mascot {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.mascot-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+.mascot p {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* ========================================
+   主要內容區
+   ======================================== */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ========================================
+   頂部Header
+   ======================================== */
+.top-header {
+    background: linear-gradient(135deg, #C8D5C3 0%, #B8CEE1 100%);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.school-logo {
+    width: 50px;
+    height: 50px;
+}
+
+.header-left h2 {
+    font-size: 18px;
+    color: #2D5A3D;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.header-left p {
+    font-size: 11px;
+    color: #5A6C57;
+}
+
+.header-right {
+    display: flex;
+    gap: 20px;
+}
+
+.header-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    color: #5A6C57;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.header-link:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+/* ========================================
+   內容區域
+   ======================================== */
+.content-section {
+    display: none;
+    padding: 30px 40px;
+    overflow-y: auto;
+    height: calc(100vh - 90px);
+}
+
+.content-section.active {
+    display: block;
+}
+
+.section-title {
+    font-size: 28px;
+    color: #2D5A3D;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* ========================================
+   搜尋區域
+   ======================================== */
+.search-container {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+}
+
+/* 搜尋列 */
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.search-row label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+.form-select {
+    padding: 12px 15px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #5A6C57;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #5A6C57;
+}
+
+/* 篩選按鈕 */
+.filter-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 10px 18px;
+    background: #E8F3F1;
+    border: 1px solid #B8D5CB;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #5A6C57;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.filter-btn:hover {
+    background: #D5E8E3;
+    border-color: #5A6C57;
+}
+
+/* 篩選條件列 */
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-row label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+/* 搜尋按鈕區 */
+.search-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn-search,
+.btn-clear {
+    padding: 12px 40px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.btn-search {
+    background: linear-gradient(135deg, #C8D5C3 0%, #B8CEE1 100%);
+    color: #2D5A3D;
+}
+
+.btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(90, 108, 87, 0.3);
+}
+
+.btn-clear {
+    background: #F0F0F0;
+    color: #666;
+}
+
+.btn-clear:hover {
+    background: #E0E0E0;
+}
+
+/* ========================================
+   搜尋結果區域
+   ======================================== */
+.results-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 16px;
+}
+
+/* 結果表格 */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    table-layout: fixed;
+}
+
+/* 表格欄位寬度設定 - 共13欄 */
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) { width: 5%; }   /* 學期 */
+.results-table th:nth-child(2),
+.results-table td:nth-child(2) { width: 10%; }  /* 系所 */
+.results-table th:nth-child(3),
+.results-table td:nth-child(3) { width: 4%; }   /* 年級 */
+.results-table th:nth-child(4),
+.results-table td:nth-child(4) { width: 12%; }  /* 課程名稱 */
+.results-table th:nth-child(5),
+.results-table td:nth-child(5) { width: 8%; }   /* 授課教師 */
+.results-table th:nth-child(6),
+.results-table td:nth-child(6) { width: 4%; }   /* 學分 */
+.results-table th:nth-child(7),
+.results-table td:nth-child(7) { width: 10%; }  /* 課別 */
+.results-table th:nth-child(8),
+.results-table td:nth-child(8) { width: 6%; }   /* 教室 */
+.results-table th:nth-child(9),
+.results-table td:nth-child(9) { width: 5%; }   /* 星期 */
+.results-table th:nth-child(10),
+.results-table td:nth-child(10) { width: 8%; }  /* 節次 */
+.results-table th:nth-child(11),
+.results-table td:nth-child(11) { width: 6%; }  /* 大綱 */
+.results-table th:nth-child(12),
+.results-table td:nth-child(12) { width: 6%; }  /* 收藏 */
+.results-table th:nth-child(13),
+.results-table td:nth-child(13) { width: 6%; }  /* 預選 */
+
+.results-table thead {
+    background: #F5E6D3;
+}
+
+.results-table th {
+    padding: 15px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #E0E0E0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.results-table td {
+    padding: 15px 8px;
+    border-bottom: 1px solid #F0F0F0;
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.results-table tbody tr:hover {
+    background: #F9F9F9;
+}
+
+/* 操作按鈕 */
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px 8px;
+    transition: transform 0.2s;
+}
+
+.btn-icon:hover {
+    transform: scale(1.2);
+}
+
+/* ========================================
+   響應式設計
+   ======================================== */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+    
+    .top-header {
+        padding: 15px 25px;
+    }
+    
+    .content-section {
+        padding: 20px 25px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+    
+    .nav-menu {
+        display: flex;
+        padding: 10px;
+    }
+    
+    .nav-item {
+        margin: 0 5px;
+    }
+    
+    .nav-item a span {
+        display: none;
+    }
+    
+    .sidebar-footer {
+        display: none;
+    }
+    
+    .top-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .search-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+/* ========================================
+   課程資訊 Modal 樣式
+   ======================================== */
+.course-info-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.course-info-modal {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 550px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.course-info-header {
+    background: #5A6C57;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.course-info-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.course-info-header .close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.course-info-body {
+    padding: 20px;
+}
+
+.info-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.info-row.single {
+    display: block;
+}
+
+.info-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-item.full {
+    width: 100%;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.info-value {
+    background: #f5f5f5;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+}
+
+.info-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.info-section .info-label {
+    margin-bottom: 8px;
+}
+
+.info-text {
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.course-info-footer {
+    padding: 15px 20px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.btn-close {
+    background: #5A6C57;
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-close:hover {
+    background: #4a5c47;
+}
+
+/* 表格按鈕樣式 */
+.btn-outline {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+.btn-outline:hover {
+    background: #f5f5f5;
+}
+
+.btn-heart {
+    color: #e91e63;
+    font-size: 18px;
+}
+
+.btn-add {
+    color: #5A6C57;
+    font-size: 18px;
+}
+
+.classroom-link {
+    color: #2196F3;
+    text-decoration: underline;
+}
+
+/* ========================================
+   篩選面板樣式 (橫向排列)
+   ======================================== */
+.filter-panel {
+    background: #F8F9FA;
+    border: 1px solid #D5E8E3;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.filter-panel-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2D5A3D;
+    margin-bottom: 15px;
+}
+
+.filter-panel-content {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.filter-checkbox-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #D5E8E3;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-checkbox-group:hover {
+    background: #E8F3F1;
+    border-color: #5A6C57;
+}
+
+.filter-checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #5A6C57;
+    cursor: pointer;
+    margin: 0;
+}
+
+.filter-checkbox-group label {
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    white-space: nowrap;
+    margin: 0;
+}
+
+/* ========================================
+   課表視覺化樣式
+   ======================================== */
+.schedule-container {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.schedule-header {
+    background: #5A6C57;
+    color: white;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.schedule-period {
+    background: #f5f5f5;
+    text-align: center;
+    font-weight: 600;
+    width: 50px;
+    padding: 8px;
+}
+
+.schedule-time {
+    background: #f5f5f5;
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+    width: 90px;
+    padding: 8px;
+}
+
+.schedule-cell {
+    border: 1px solid #eee;
+    height: 50px;
+    vertical-align: middle;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.schedule-cell:hover {
+    background: #f9f9f9;
+}
+
+.schedule-cell.has-course {
+    background: #E8F5E9;
+}
+
+.schedule-cell.has-course:hover {
+    background: #C8E6C9;
+}
+
+.course-block {
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #2E7D32;
+    font-weight: 500;
+    word-break: break-all;
+}
+
+.schedule-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+}
+
+.credits-total {
+    font-size: 14px;
+    color: #333;
+}
+
+.credits-total span {
+    font-weight: 600;
+    color: #5A6C57;
+}
+
+.btn-export {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #5A6C57;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-export:hover {
+    background: #4a5c47;
+}
+
+.btn-export svg {
+    width: 16px;
+    height: 16px;
+}
+/* ========================================
+   課程資訊 Modal 樣式 (學生版)
+   ======================================== */
+.course-info-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.course-info-modal {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 580px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    border: 2px solid #5A6C57;
+}
+
+.course-info-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.course-info-header.student-header {
+    background: #5A6C57;
+}
+
+.course-info-header.admin-header {
+    background: #5A6C57;
+}
+
+.course-info-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+}
+
+.close-btn-x {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.course-info-body {
+    padding: 20px;
+}
+
+.info-grid {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.info-grid.single {
+    display: block;
+}
+
+.info-cell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-cell.full {
+    width: 100%;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.info-value {
+    background: #E8F5E9;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #C8E6C9;
+}
+
+.info-remarks {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.info-remarks .info-label {
+    margin-bottom: 8px;
+    display: block;
+}
+
+.remarks-text {
+    background: #E8F5E9;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid #C8E6C9;
+}
+
+.course-info-footer {
+    padding: 15px 20px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.btn-close-green {
+    background: #5A6C57;
+    color: white;
+    border: none;
+    padding: 10px 40px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-close-green:hover {
+    background: #4a5c47;
+}
+
+/* ========================================
+   課表視覺化樣式
+   ======================================== */
+.schedule-container {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+}
+
+.schedule-title {
+    background: #5A6C57;
+    color: white;
+    padding: 15px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.schedule-header {
+    background: #5A6C57;
+    color: white;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid #4a5c47;
+}
+
+.schedule-period {
+    background: #f5f5f5;
+    text-align: center;
+    font-weight: 600;
+    width: 50px;
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+.schedule-time {
+    background: #f5f5f5;
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+    width: 90px;
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+.schedule-cell {
+    border: 1px solid #ddd;
+    height: 70px;
+    vertical-align: top;
+    text-align: center;
+    padding: 5px;
+}
+
+.schedule-cell.has-course {
+    background: #E8F5E9;
+}
+
+.course-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+}
+
+.course-name {
+    font-size: 12px;
+    color: #333;
+    font-weight: 500;
+    line-height: 1.3;
+    word-break: break-all;
+}
+
+.course-room {
+    font-size: 11px;
+    color: #666;
+}
+
+.btn-delete-course {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.btn-delete-course:hover {
+    background: #c82333;
+}
+
+.schedule-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #ddd;
+}
+
+.credits-total {
+    font-size: 14px;
+    color: #333;
+}
+
+.credits-total span {
+    font-weight: 600;
+    color: #5A6C57;
+}
+
+.btn-export {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #5A6C57;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-export:hover {
+    background: #4a5c47;
+}
+
+/* 表格按鈕樣式 */
+.btn-outline {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+.btn-outline:hover {
+    background: #f5f5f5;
+}
+
+.btn-heart {
+    color: #e91e63;
+    font-size: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-heart:hover {
+    color: #c2185b;
+}
+
+.btn-add {
+    color: #5A6C57;
+    font-size: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-add:hover {
+    color: #3d4a3b;
+}
+
+.classroom-link {
+    color: #2196F3;
+    text-decoration: underline;
+}
+
+/* ========================================
+   收藏清單卡片樣式
+   ======================================== */
+.favorites-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+}
+
+.favorite-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #F5DEB3 0%, #FFDAB9 100%);
+    border-radius: 25px;
+    padding: 15px 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.favorite-card:nth-child(odd) {
+    background: linear-gradient(135deg, #FFE4C4 0%, #FFDAB9 100%);
+}
+
+.favorite-card:nth-child(even) {
+    background: linear-gradient(135deg, #E8C4A0 0%, #DEB887 100%);
+}
+
+.favorite-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.favorite-info {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    flex: 1;
+}
+
+.favorite-semester {
+    font-weight: 600;
+    color: #5A4A3A;
+    min-width: 50px;
+}
+
+.favorite-dept {
+    color: #6B5B4B;
+    min-width: 80px;
+}
+
+.favorite-type {
+    color: #7B6B5B;
+    min-width: 70px;
+}
+
+.favorite-name {
+    font-weight: 500;
+    color: #4A3A2A;
+    flex: 1;
+}
+
+.favorite-instructor {
+    color: #6B5B4B;
+    min-width: 70px;
+}
+
+.favorite-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-add-preselect {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(90, 108, 87, 0.3);
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-add-preselect:hover {
+    background: rgba(90, 108, 87, 0.2);
+    border-color: #5A6C57;
+}
+
+.btn-add-preselect svg {
+    stroke: #5A6C57;
+}
+
+.btn-remove-favorite {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(200, 100, 100, 0.3);
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-remove-favorite:hover {
+    background: rgba(200, 100, 100, 0.2);
+    border-color: #C86464;
+}
+
+.btn-remove-favorite svg {
+    stroke: #C86464;
+}
+
+/* ========================================
+   訪客模式樣式
+   ======================================== */
+.guest-badge {
+    background: #5A6C57;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.guest-notice {
+    background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+    border: 1px solid #FFB74D;
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin: 0 30px 20px 30px;
+    text-align: center;
+}
+
+.guest-notice span {
+    color: #E65100;
+    font-size: 14px;
+}
+
+.guest-notice a {
+    color: #5A6C57;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.guest-notice a:hover {
+    color: #3d4a3b;
+}
+
+/* ========================================
+   訪客模式樣式
+   ======================================== */
+.guest-notice {
+    padding: 15px;
+    margin: 20px 10px;
+    background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+    border-radius: 10px;
+    text-align: center;
+    border: 1px dashed #FFB74D;
+}
+
+.guest-notice p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #E65100;
+    margin-bottom: 5px;
+}
+
+.guest-notice small {
+    font-size: 11px;
+    color: #F57C00;
+}
+
+/* 訪客模式表格 - 11欄 */
+.guest-table th:nth-child(1),
+.guest-table td:nth-child(1) { width: 6%; }   /* 學期 */
+.guest-table th:nth-child(2),
+.guest-table td:nth-child(2) { width: 12%; }  /* 系所 */
+.guest-table th:nth-child(3),
+.guest-table td:nth-child(3) { width: 5%; }   /* 年級 */
+.guest-table th:nth-child(4),
+.guest-table td:nth-child(4) { width: 14%; }  /* 課程名稱 */
+.guest-table th:nth-child(5),
+.guest-table td:nth-child(5) { width: 10%; }  /* 授課教師 */
+.guest-table th:nth-child(6),
+.guest-table td:nth-child(6) { width: 5%; }   /* 學分 */
+.guest-table th:nth-child(7),
+.guest-table td:nth-child(7) { width: 12%; }  /* 課別 */
+.guest-table th:nth-child(8),
+.guest-table td:nth-child(8) { width: 8%; }   /* 教室 */
+.guest-table th:nth-child(9),
+.guest-table td:nth-child(9) { width: 6%; }   /* 星期 */
+.guest-table th:nth-child(10),
+.guest-table td:nth-child(10) { width: 10%; } /* 節次 */
+.guest-table th:nth-child(11),
+.guest-table td:nth-child(11) { width: 8%; }  /* 大綱 */
