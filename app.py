@@ -306,6 +306,188 @@ def guest_page():
     return render_template('guest.html')
 
 # ========================================
+# 路由: 資料庫初始化 (免費方案用)
+# ========================================
+@app.route('/api/init-database')
+def init_database_api():
+    """
+    手動初始化資料庫的 API 端點
+    訪問 /api/init-database 即可初始化
+    適用於 Render 免費方案（無法使用 Shell）
+    """
+    results = []
+    
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        if USE_POSTGRES:
+            results.append("✅ PostgreSQL 連接成功")
+            
+            # 創建 users 表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'student',
+                    name TEXT DEFAULT '',
+                    student_id TEXT DEFAULT '',
+                    department TEXT DEFAULT '',
+                    class_name TEXT DEFAULT '',
+                    phone TEXT DEFAULT '',
+                    email TEXT DEFAULT '',
+                    avatar TEXT DEFAULT '🐱',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+            results.append("✅ users 表創建成功")
+            
+            # 創建 courses 表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS courses (
+                    id SERIAL PRIMARY KEY,
+                    semester TEXT NOT NULL,
+                    department TEXT NOT NULL,
+                    grade TEXT,
+                    course_code TEXT NOT NULL,
+                    course_name TEXT NOT NULL,
+                    course_name_en TEXT,
+                    instructor TEXT,
+                    credits REAL,
+                    course_type TEXT,
+                    classroom TEXT,
+                    day_time TEXT,
+                    weekday TEXT,
+                    period TEXT,
+                    capacity INTEGER DEFAULT 60,
+                    enrolled INTEGER DEFAULT 0,
+                    class_group TEXT,
+                    remarks TEXT,
+                    course_summary TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+            results.append("✅ courses 表創建成功")
+            
+            # 創建 enrollments 表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS enrollments (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+                    status TEXT DEFAULT 'enrolled',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+            results.append("✅ enrollments 表創建成功")
+            
+            # 創建索引
+            try:
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_courses_semester ON courses(semester)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_courses_department ON courses(department)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_enrollments_user ON enrollments(user_id)')
+                conn.commit()
+                results.append("✅ 索引創建成功")
+            except Exception as e:
+                results.append(f"⚠️ 索引可能已存在: {str(e)}")
+                conn.rollback()
+            
+            # 檢查並插入預設使用者
+            cursor.execute('SELECT COUNT(*) as count FROM users')
+            user_count = cursor.fetchone()
+            count = user_count['count'] if isinstance(user_count, dict) else user_count[0]
+            
+            if count == 0:
+                cursor.execute('''
+                    INSERT INTO users (username, password, role, name, student_id, department, avatar)
+                    VALUES 
+                        ('student1', 'pass123', 'student', '測試學生', 'S001', '護理系', '🐱'),
+                        ('admin', 'admin123', 'admin', '系統管理員', 'A001', '資訊中心', '👨‍💼')
+                ''')
+                conn.commit()
+                results.append("✅ 預設使用者創建成功 (student1/pass123, admin/admin123)")
+            else:
+                results.append(f"ℹ️ 已有 {count} 個使用者，跳過創建預設使用者")
+            
+            # 統計資料
+            cursor.execute('SELECT COUNT(*) as count FROM courses')
+            course_count = cursor.fetchone()
+            course_count = course_count['count'] if isinstance(course_count, dict) else course_count[0]
+            results.append(f"📊 目前課程數量: {course_count}")
+            
+        else:
+            results.append("ℹ️ 使用 SQLite 模式（本地開發）")
+            init_db()
+            results.append("✅ SQLite 資料庫初始化完成")
+        
+        cursor.close()
+        conn.close()
+        
+        # 返回 HTML 格式的結果
+        html = '''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>資料庫初始化結果</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
+                .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                h1 { color: #2d5a27; }
+                .result { padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 5px; }
+                .success { color: #28a745; }
+                .info { color: #17a2b8; }
+                .warning { color: #ffc107; }
+                a { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2d5a27; color: white; text-decoration: none; border-radius: 5px; }
+                a:hover { background: #1e3d1a; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🗄️ 資料庫初始化結果</h1>
+                %s
+                <a href="/">← 返回登入頁面</a>
+            </div>
+        </body>
+        </html>
+        ''' % ''.join([f'<div class="result">{r}</div>' for r in results])
+        
+        return html
+        
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        html = f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>資料庫初始化錯誤</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
+                h1 {{ color: #dc3545; }}
+                pre {{ background: #f8f9fa; padding: 15px; overflow-x: auto; border-radius: 5px; }}
+                a {{ display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2d5a27; color: white; text-decoration: none; border-radius: 5px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>❌ 初始化失敗</h1>
+                <p>錯誤訊息: {str(e)}</p>
+                <pre>{error_detail}</pre>
+                <a href="/">← 返回登入頁面</a>
+            </div>
+        </body>
+        </html>
+        '''
+        return html
+
+# ========================================
 # 路由: 管理者頁面
 # ========================================
 @app.route('/admin')
