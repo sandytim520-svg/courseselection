@@ -410,6 +410,7 @@ async function editCourse(courseId) {
             document.getElementById('courseLocation').value = course.classroom || '';
             document.getElementById('courseClassGroup').value = course.class_group || '';
             document.getElementById('courseGrade').value = course.grade || '';
+            document.getElementById('courseType').value = course.course_type || '';  // 課別
             document.getElementById('courseCapacity').value = course.capacity || 60;
             document.getElementById('courseRemarks').value = course.remarks || '';
             
@@ -442,6 +443,7 @@ async function handleCourseSubmit(e) {
         classroom: document.getElementById('courseLocation').value,
         class_group: document.getElementById('courseClassGroup').value,
         grade: document.getElementById('courseGrade').value,
+        course_type: document.getElementById('courseType').value,  // 課別
         capacity: document.getElementById('courseCapacity').value,
         remarks: document.getElementById('courseRemarks').value
     };
@@ -537,6 +539,15 @@ function handleFileSelect(e) {
 // ========================================
 async function handleFileUpload(file) {
     const statusDiv = document.getElementById('uploadStatus');
+    const semesterInput = document.getElementById('importSemester');
+    const semester = semesterInput ? semesterInput.value.trim() : '';
+    
+    // 檢查學期
+    if (!semester) {
+        statusDiv.className = 'upload-status error';
+        statusDiv.textContent = '✗ 請先輸入學期！';
+        return;
+    }
     
     // 檢查檔案類型
     const validTypes = ['.csv', '.xlsx', '.xls'];
@@ -557,10 +568,11 @@ async function handleFileUpload(file) {
     
     // 顯示上傳中
     statusDiv.className = 'upload-status';
-    statusDiv.textContent = '⏳ 正在上傳檔案...';
+    statusDiv.textContent = '⏳ 正在匯入課程資料...';
     
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('semester', semester);
     
     try {
         const response = await fetch('/api/import-courses', {
@@ -574,6 +586,9 @@ async function handleFileUpload(file) {
             statusDiv.className = 'upload-status success';
             statusDiv.textContent = `✓ 成功匯入 ${result.count || 0} 筆課程資料！`;
             console.log('✅ 檔案上傳成功');
+            
+            // 重新載入學期列表（如果有動態學期選單的話）
+            loadSemesters();
         } else {
             statusDiv.className = 'upload-status error';
             statusDiv.textContent = '✗ ' + result.message;
@@ -582,6 +597,39 @@ async function handleFileUpload(file) {
         console.error('❌ 上傳失敗:', error);
         statusDiv.className = 'upload-status error';
         statusDiv.textContent = '✗ 上傳失敗，請稍後再試';
+    }
+}
+
+// ========================================
+// 功能：載入學期列表
+// ========================================
+async function loadSemesters() {
+    try {
+        const response = await fetch('/api/semesters');
+        const data = await response.json();
+        
+        if (data.success && data.semesters) {
+            const select = document.getElementById('adminSemesterSelect');
+            if (select) {
+                // 保存當前選擇
+                const currentValue = select.value;
+                
+                // 清空並重新填充
+                select.innerHTML = '<option value="">請選擇學期</option>';
+                data.semesters.forEach(s => {
+                    const option = document.createElement('option');
+                    option.value = s;
+                    option.textContent = s;
+                    select.appendChild(option);
+                });
+                
+                // 恢復選擇
+                if (currentValue) select.value = currentValue;
+            }
+            console.log(`✅ 載入 ${data.semesters.length} 個學期`);
+        }
+    } catch (error) {
+        console.error('❌ 載入學期失敗:', error);
     }
 }
 
@@ -613,25 +661,18 @@ function displayAccounts(users) {
         return;
     }
     
-    // 卡通人物頭像列表
-    const avatars = [
-        'https://i.imgur.com/5qZnLQ3.png', // 章魚哥
-        'https://i.imgur.com/2k8H9X1.png', // 蝸牛
-        'https://i.imgur.com/1mZ3K9x.png', // 派大星
-        'https://i.imgur.com/9xK2L1m.png', // 海綿寶寶
-        'https://i.imgur.com/7xM2N3p.png', // 蟹老闆
-        'https://i.imgur.com/4xL3K2n.png'  // 皮老闆
-    ];
+    // 卡通人物表情符號
+    const avatars = ['🧑‍🎓', '👨‍🎓', '👩‍🎓', '🐙', '🐌', '⭐'];
     
     let html = '';
     users.forEach((user, index) => {
         const avatar = avatars[index % avatars.length];
         html += `
-            <div class="account-card">
-                <button class="delete-account-btn" onclick="deleteAccount('${user.username}')" title="刪除帳號">✖</button>
-                <img src="${avatar}" alt="${user.name}" class="account-avatar" onerror="this.src='https://via.placeholder.com/100'">
+            <div class="account-card" onclick="editAccount(${user.id})" style="cursor: pointer;">
+                <button class="delete-account-btn" onclick="event.stopPropagation(); deleteAccount(${user.id}, '${user.username}')" title="刪除帳號">✖</button>
+                <div class="account-avatar-emoji">${avatar}</div>
                 <div class="account-name">${user.name || user.username}</div>
-                <div class="account-id">ID : ${user.username}</div>
+                <div class="account-id">ID : ${user.student_id || user.username}</div>
             </div>
         `;
     });
@@ -942,6 +983,149 @@ function restoreAdminFilterSelections(type) {
                 checkbox.checked = true;
             }
         });
+    }
+}
+
+// ========================================
+// 變更密碼功能
+// ========================================
+function showChangePasswordModal() {
+    document.getElementById('changePasswordModal').style.display = 'flex';
+    document.getElementById('oldPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+}
+
+function closeChangePasswordModal() {
+    document.getElementById('changePasswordModal').style.display = 'none';
+}
+
+async function submitChangePassword(event) {
+    event.preventDefault();
+    
+    const oldPassword = document.getElementById('oldPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        alert('新密碼與確認密碼不一致！');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/change-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                old_password: oldPassword,
+                new_password: newPassword,
+                confirm_password: confirmPassword
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('密碼變更成功！');
+            closeChangePasswordModal();
+        } else {
+            alert('密碼變更失敗：' + result.message);
+        }
+    } catch (error) {
+        console.error('變更密碼錯誤:', error);
+        alert('變更密碼失敗，請稍後再試');
+    }
+}
+
+// ========================================
+// 帳號編輯功能
+// ========================================
+let editingUserId = null;
+
+async function editAccount(userId) {
+    try {
+        const response = await fetch(`/api/users/${userId}`);
+        const data = await response.json();
+        
+        if (data.success && data.user) {
+            editingUserId = userId;
+            const user = data.user;
+            
+            document.getElementById('editAccountId').value = user.id;
+            document.getElementById('editAccountName').value = user.name || '';
+            document.getElementById('editAccountStudentId').value = user.student_id || '';
+            document.getElementById('editAccountDepartment').value = user.department || '';
+            document.getElementById('editAccountClass').value = user.class_name || '';
+            document.getElementById('editAccountUsername').value = user.username || '';
+            
+            document.getElementById('editAccountModal').style.display = 'flex';
+        }
+    } catch (error) {
+        console.error('載入帳號資料失敗:', error);
+        alert('載入帳號資料失敗');
+    }
+}
+
+function closeEditAccountModal() {
+    document.getElementById('editAccountModal').style.display = 'none';
+    editingUserId = null;
+}
+
+async function submitEditAccount(event) {
+    event.preventDefault();
+    
+    if (!editingUserId) return;
+    
+    const data = {
+        name: document.getElementById('editAccountName').value,
+        student_id: document.getElementById('editAccountStudentId').value,
+        department: document.getElementById('editAccountDepartment').value,
+        class_name: document.getElementById('editAccountClass').value,
+        username: document.getElementById('editAccountUsername').value
+    };
+    
+    try {
+        const response = await fetch(`/api/users/${editingUserId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('帳號資料更新成功！');
+            closeEditAccountModal();
+            loadAccounts();
+        } else {
+            alert('更新失敗：' + result.message);
+        }
+    } catch (error) {
+        console.error('更新帳號失敗:', error);
+        alert('更新帳號失敗，請稍後再試');
+    }
+}
+
+async function resetAccountPassword() {
+    if (!editingUserId) return;
+    
+    if (!confirm('確定要將此帳號的密碼重設為預設值 (pass123) 嗎？')) return;
+    
+    try {
+        const response = await fetch(`/api/users/${editingUserId}/reset-password`, {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(result.message);
+        } else {
+            alert('重設密碼失敗：' + result.message);
+        }
+    } catch (error) {
+        console.error('重設密碼失敗:', error);
+        alert('重設密碼失敗，請稍後再試');
     }
 }
 
