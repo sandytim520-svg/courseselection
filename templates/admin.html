@@ -67,7 +67,7 @@
                 <span>登出</span>
             </button>
             
-            <div class="mascot">
+            <div class="mascot" onclick="showChangePasswordModal()" style="cursor: pointer;" title="點擊變更密碼">
                 <div class="mascot-icon">🧑‍💼</div>
                 <p>管鯉圖</p>
             </div>
@@ -204,6 +204,13 @@
             <h2 class="section-title">📥 匯入課程</h2>
             
             <div class="import-container">
+                <div class="import-form">
+                    <div class="form-group">
+                        <label>學期 *</label>
+                        <input type="text" id="importSemester" placeholder="例：1142" required>
+                    </div>
+                </div>
+                
                 <div class="import-header">
                     <button class="btn-browse" onclick="document.getElementById('fileInput').click()">
                         瀏覽
@@ -334,9 +341,20 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>容量</label>
-                            <input type="number" id="courseCapacity" min="0" value="60">
+                            <label>課別 *</label>
+                            <select id="courseType" required>
+                                <option value="">請選擇</option>
+                                <option value="專業必修(系所)">專業必修(系所)</option>
+                                <option value="專業選修(系所)">專業選修(系所)</option>
+                                <option value="通識必修(通識)">通識必修(通識)</option>
+                                <option value="通識選修(通識)">通識選修(通識)</option>
+                            </select>
                         </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>容量</label>
+                        <input type="number" id="courseCapacity" min="0" value="60">
                     </div>
                     
                     <div class="form-group">
@@ -390,6 +408,99 @@
                     <div class="modal-footer">
                         <button type="button" class="btn-cancel" onclick="closeAccountModal()">取消</button>
                         <button type="submit" class="btn-submit">新增</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         Modal: 變更密碼
+         ======================================== -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>🔒 變更密碼</h3>
+                <button class="close-btn" onclick="closeChangePasswordModal()">✖</button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm" onsubmit="submitChangePassword(event)">
+                    <div class="form-group">
+                        <label>舊密碼：</label>
+                        <input type="password" id="oldPassword" required placeholder="請輸入舊密碼">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>新密碼：</label>
+                        <input type="password" id="newPassword" required placeholder="請輸入新密碼">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>再次輸入密碼：</label>
+                        <input type="password" id="confirmPassword" required placeholder="請輸入新密碼">
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn-back" onclick="closeChangePasswordModal()">返回</button>
+                        <button type="submit" class="btn-submit">確定</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         Modal: 編輯帳號資料
+         ======================================== -->
+    <div id="editAccountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👤 帳號資料</h3>
+                <button class="close-btn" onclick="closeEditAccountModal()">✖</button>
+            </div>
+            <div class="modal-body">
+                <form id="editAccountForm" onsubmit="submitEditAccount(event)">
+                    <input type="hidden" id="editAccountId">
+                    
+                    <div class="account-profile">
+                        <div class="profile-avatar">🧑‍🎓</div>
+                        <div class="profile-info">
+                            <div class="form-group">
+                                <label>姓名：</label>
+                                <input type="text" id="editAccountName" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>學號：</label>
+                                <input type="text" id="editAccountStudentId">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>系所：</label>
+                                <input type="text" id="editAccountDepartment">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>班級：</label>
+                                <input type="text" id="editAccountClass">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>帳號：</label>
+                                <input type="text" id="editAccountUsername" required>
+                            </div>
+                            
+                            <div class="form-group password-group">
+                                <label>密碼：</label>
+                                <span id="editAccountPassword">******</span>
+                                <button type="button" class="btn-reset-password" onclick="resetAccountPassword()">將密碼改回預設</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn-back" onclick="closeEditAccountModal()">返回</button>
+                        <button type="submit" class="btn-submit">儲存</button>
                     </div>
                 </form>
             </div>
