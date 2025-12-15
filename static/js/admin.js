@@ -601,6 +601,15 @@ async function handleFileUpload(file) {
             body: formData
         });
         
+        // 檢查 HTTP 狀態碼
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('伺服器錯誤:', response.status, errorText);
+            statusDiv.className = 'upload-status error';
+            statusDiv.textContent = `✗ 伺服器錯誤 (${response.status})，請稍後再試`;
+            return;
+        }
+        
         const result = await response.json();
         
         if (result.success) {
@@ -613,11 +622,12 @@ async function handleFileUpload(file) {
         } else {
             statusDiv.className = 'upload-status error';
             statusDiv.textContent = '✗ ' + result.message;
+            console.error('匯入失敗:', result.message);
         }
     } catch (error) {
         console.error('❌ 上傳失敗:', error);
         statusDiv.className = 'upload-status error';
-        statusDiv.textContent = '✗ 上傳失敗，請稍後再試';
+        statusDiv.textContent = '✗ 網路錯誤：' + error.message;
     }
 }
 
