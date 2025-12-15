@@ -2,8 +2,9 @@
 # 北護課程查詢系統 - Flask後端程式 (完整版)
 # 支援從Excel匯入的真實課程資料
 # ==========================================================
-
+import os
 from flask import Flask, request, jsonify, session, render_template, redirect
+from create_database import init_db, check_users
 import sqlite3
 import os
 from datetime import datetime
@@ -688,7 +689,7 @@ def delete_course(course_id):
 # ========================================
 # 主程式入口
 # ========================================
-import os # 如果你上面沒加，加在這裡也可以
+
 
 if __name__ == '__main__':
     init_db()
@@ -701,3 +702,4 @@ if __name__ == '__main__':
     
     # host='0.0.0.0' 代表允許外部連線 (Render 才能連)
     app.run(host='0.0.0.0', port=port)
+    
